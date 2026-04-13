@@ -51,7 +51,7 @@ interface AlertaData {
 interface ForecastData {
   pesqueiros: PesqueiroForecast[]
   rankingMelhorDia: Array<{ slug: string; nome: string } & DayForecast>
-  alertas: AlertaData[]
+  alertasPorDia: Record<string, AlertaData[]>
 }
 
 function getDayColor(score: number): string {
@@ -245,13 +245,13 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Alertas de navegação */}
-      {forecast?.alertas && (
+      {/* Alertas de navegação do dia selecionado */}
+      {forecast?.alertasPorDia && selectedDay && (
         <section className="mb-6">
           <h2 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-3">
-            ⚠️ Alertas de navegação — próximos 7 dias
+            ⚠️ Alertas de navegação — {selectedDayLabel}
           </h2>
-          <AlertasNavegacao alertas={forecast.alertas} />
+          <AlertasNavegacao alertas={forecast.alertasPorDia[selectedDay] ?? []} />
         </section>
       )}
 

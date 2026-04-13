@@ -210,32 +210,50 @@ export async function GET() {
       .map(p => ({ slug: p.slug, nome: p.nome, ...p.melhorDia }))
       .sort((a, b) => b.scoreMedio - a.scoreMedio)
 
-    // Alertas de navegação (usa dados do primeiro ponto como referência geral)
+    // Alertas de navegação POR DIA
     const refWeather = weatherData?.[0]
     const refMarine = marineData?.[0]
-    const condicoesAlerta = (refWeather?.hourly ?? []).map((wh, i) => {
-      const mh = refMarine?.hourly[i]
-      const pressaoSlice = refWeather?.hourly.slice(Math.max(0, i - 12), i + 1).map(x => x.pressureMsl) ?? []
-      const pressaoVar = pressaoSlice.length >= 2 ? pressaoSlice[pressaoSlice.length - 1] - pressaoSlice[0] : 0
-      return {
-        timestamp: wh.time,
-        ventoKt: wh.windSpeed10m,
-        ventoDirecao: wh.windDirection10m,
-        ondaM: mh?.waveHeight ?? 0,
-        ondaPeriodoS: mh?.wavePeriod ?? 8,
-        visibilidadeKm: wh.visibility,
-        capeJkg: wh.cape,
-        precipitacaoMm: wh.precipitation,
-        pressaoHpa: wh.pressureMsl,
-        pressaoVariacao: pressaoVar,
+    const alertasPorDia: Record<string, ReturnType<typeof detectAlertasNavegacao>> = {}
+
+    const allHourly = refWeather?.hourly ?? []
+    const hoursByDate = new Map<string, typeof allHourly>()
+    for (let i = 0; i < allHourly.length; i++) {
+      const wh = allHourly[i]
+      const date = wh.time.split('T')[0]
+      if (!hoursByDate.has(date)) hoursByDate.set(date, [])
+      hoursByDate.get(date)!.push(wh)
+    }
+
+    for (const [date, dayHourly] of hoursByDate) {
+      const startIdx = allHourly.indexOf(dayHourly[0])
+      const condicoesAlerta = dayHourly.map((wh, j) => {
+        const globalIdx = startIdx + j
+        const mh = refMarine?.hourly[globalIdx]
+        const pressaoSlice = allHourly.slice(Math.max(0, globalIdx - 12), globalIdx + 1).map(x => x.pressureMsl)
+        const pressaoVar = pressaoSlice.length >= 2 ? pressaoSlice[pressaoSlice.length - 1] - pressaoSlice[0] : 0
+        return {
+          timestamp: wh.time,
+          ventoKt: wh.windSpeed10m,
+          ventoDirecao: wh.windDirection10m,
+          ondaM: mh?.waveHeight ?? 0,
+          ondaPeriodoS: mh?.wavePeriod ?? 8,
+          visibilidadeKm: wh.visibility,
+          capeJkg: wh.cape,
+          precipitacaoMm: wh.precipitation,
+          pressaoHpa: wh.pressureMsl,
+          pressaoVariacao: pressaoVar,
+        }
+      })
+      const dayAlertas = detectAlertasNavegacao(condicoesAlerta)
+      if (dayAlertas.length > 0) {
+        alertasPorDia[date] = dayAlertas
       }
-    })
-    const alertas = detectAlertasNavegacao(condicoesAlerta)
+    }
 
     return NextResponse.json({
       pesqueiros: result,
       rankingMelhorDia,
-      alertas,
+      alertasPorDia,
       geradoEm: now.toISOString(),
     })
   } catch (e) {
