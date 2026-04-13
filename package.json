@@ -12,7 +12,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
-    "ais": "tsx src/fetchers/ais-stream.ts"
+    "ais": "tsx --env-file=.env src/fetchers/ais-stream.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

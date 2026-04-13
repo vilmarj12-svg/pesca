@@ -4,8 +4,8 @@ import Database from 'better-sqlite3'
 const DATABASE_URL = process.env.DATABASE_URL || './data/pesca.db'
 const API_KEY = process.env.AISSTREAM_API_KEY || ''
 
-// Bounding box litoral PR: lat -25.95 a -25.30, lon -48.65 a -48.00
-const PARANAGUA_BBOX = [[[-25.95, -48.65], [-25.30, -48.00]]]
+// Bounding box amplo: costa PR + norte SC + sul SP (captura navios em trânsito)
+const PARANAGUA_BBOX = [[[-26.5, -49.0], [-25.0, -47.5]]]
 
 const NAV_STATUS: Record<number, string> = {
   0: 'navegando',
@@ -73,6 +73,12 @@ function run() {
     socket.on('message', (rawData) => {
       try {
         const msg = JSON.parse(rawData.toString())
+
+        // Debug: log first message to see structure
+        if (shipCount === 0) {
+          console.log('[AIS] First message:', JSON.stringify(msg).slice(0, 500))
+        }
+
         if (msg.MessageType !== 'PositionReport') return
 
         const meta = msg.MetaData
