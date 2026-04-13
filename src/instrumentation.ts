@@ -1,61 +1,55 @@
 export async function register() {
-  // Only run cron in production server (not during build or client)
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const HOUR_MS = 60 * 60 * 1000
+    const port = process.env.PORT || '3000'
+    const base = `http://localhost:${port}`
+    const token = process.env.ADMIN_TOKEN || ''
 
-    // Refresh scores + ships every hour
+    // Refresh every hour via internal HTTP call
     setInterval(async () => {
       try {
-        const { runRefresh } = await import('@/cron/refresh')
-        const result = await runRefresh()
-        console.log(`[CRON] Refresh: ${result.status} — ${result.pesqueirosProcessados} pesqueiros, ${result.alertasEnviados ?? 0} alertas`)
+        const res = await fetch(`${base}/api/cron/refresh?token=${token}`)
+        const data = await res.json()
+        console.log(`[CRON] Refresh: ${data.status} — ${data.pesqueirosProcessados} pesqueiros`)
       } catch (e) {
         console.error('[CRON] Refresh failed:', e)
       }
     }, HOUR_MS)
 
-    // Daily summary at 07:00 BRT (10:00 UTC)
+    // Daily Telegram at 07:00 BRT (10:00 UTC)
     function scheduleDaily() {
       const now = new Date()
       const target = new Date(now)
-      target.setUTCHours(10, 0, 0, 0) // 07:00 BRT = 10:00 UTC
+      target.setUTCHours(10, 0, 0, 0)
       if (target <= now) target.setDate(target.getDate() + 1)
       const delay = target.getTime() - now.getTime()
 
       setTimeout(async () => {
         try {
-          const { sendMessage } = await import('@/telegram/send')
-          const { buildDailySummaryText } = await import('@/telegram/daily-summary')
-          const { buildDashboardData } = await import('@/app/api/dashboard/data')
-
-          const data = buildDashboardData()
-          const latestSnap = data.pesqueiros[0]
-          const text = buildDailySummaryText(
-            data.pesqueiros, 0.5, 1013, 0, 1.0, 10, 180,
-          )
-          await sendMessage(text)
-          console.log('[CRON] Daily Telegram sent')
+          const res = await fetch(`${base}/api/cron/telegram-daily?token=${token}`, { method: 'POST' })
+          const data = await res.json()
+          console.log(`[CRON] Telegram: sent=${data.sent}`)
         } catch (e) {
-          console.error('[CRON] Daily Telegram failed:', e)
+          console.error('[CRON] Telegram failed:', e)
         }
-        scheduleDaily() // schedule next day
+        scheduleDaily()
       }, delay)
 
-      console.log(`[CRON] Daily Telegram scheduled in ${Math.round(delay / 60000)}min`)
+      console.log(`[CRON] Telegram daily scheduled in ${Math.round(delay / 60000)}min`)
     }
 
-    // Run first refresh 30s after startup
+    // First refresh 60s after startup (wait for server to be ready)
     setTimeout(async () => {
       try {
-        const { runRefresh } = await import('@/cron/refresh')
-        const result = await runRefresh()
-        console.log(`[CRON] Initial refresh: ${result.status} — ${result.pesqueirosProcessados} pesqueiros`)
+        const res = await fetch(`${base}/api/cron/refresh?token=${token}`)
+        const data = await res.json()
+        console.log(`[CRON] Initial refresh: ${data.status} — ${data.pesqueirosProcessados} pesqueiros`)
       } catch (e) {
         console.error('[CRON] Initial refresh failed:', e)
       }
-    }, 30000)
+    }, 60000)
 
     scheduleDaily()
-    console.log('[CRON] Cron jobs registered: refresh (1h), telegram daily (07:00 BRT)')
+    console.log('[CRON] Registered: refresh (1h), telegram (07:00 BRT)')
   }
 }
