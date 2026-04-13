@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { getScoreColor } from '@/lib/score-colors'
 import { getMarkerSize, getClassificacaoLabel } from '@/lib/format'
 import type { PesqueiroResumo } from '@/lib/types'
@@ -15,6 +16,7 @@ interface MapaPesqueirosProps {
 export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
@@ -86,11 +88,32 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
     return () => { map.remove(); mapInstanceRef.current = null }
   }, [pesqueiros, onPesqueiroClick])
 
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      setTimeout(() => mapInstanceRef.current?.invalidateSize(), 200)
+    }
+  }, [fullscreen])
+
   return (
-    <div
-      ref={mapRef}
-      className="h-[320px] sm:h-[400px] lg:h-[450px] rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700"
-      style={{ zIndex: 0 }}
-    />
+    <div className={`relative ${fullscreen ? 'fixed inset-0 z-50' : ''}`}>
+      {fullscreen && (
+        <div className="absolute inset-0 bg-black/50 -z-10" onClick={() => setFullscreen(false)} />
+      )}
+      <div
+        ref={mapRef}
+        className={`${fullscreen ? 'h-full w-full' : 'h-[320px] sm:h-[400px] lg:h-[450px]'} rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700`}
+        style={{ zIndex: fullscreen ? 50 : 0 }}
+      />
+      <button
+        onClick={() => setFullscreen((f) => !f)}
+        className="absolute top-3 right-3 z-[60] p-2 rounded-lg bg-white/90 dark:bg-stone-800/90 shadow-md hover:bg-white dark:hover:bg-stone-700 transition-colors cursor-pointer"
+        title={fullscreen ? 'Minimizar mapa' : 'Maximizar mapa'}
+      >
+        {fullscreen
+          ? <Minimize2 className="w-4 h-4 text-stone-700 dark:text-stone-200" />
+          : <Maximize2 className="w-4 h-4 text-stone-700 dark:text-stone-200" />
+        }
+      </button>
+    </div>
   )
 }
