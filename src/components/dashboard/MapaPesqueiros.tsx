@@ -231,7 +231,7 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
       <div
         ref={mapRef}
         style={fullscreen ? { width: '100%', height: '100%' } : undefined}
-        className={fullscreen ? '' : 'h-[320px] sm:h-[400px] lg:h-[450px] rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700'}
+        className={fullscreen ? '' : 'h-[450px] sm:h-[550px] lg:h-[650px] rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700'}
       />
       <button
         onClick={toggleFullscreen}
