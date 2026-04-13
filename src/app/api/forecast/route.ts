@@ -128,7 +128,28 @@ export async function GET() {
       }
 
       // Group by day — only fishing hours (05:00 to 14:00)
+      // Also collect weather conditions per day to check navigation risk
       const diasMap = new Map<string, HourForecast[]>()
+      const diasWeatherMap = new Map<string, Array<{ ventoKt: number; ondaM: number; cape: number; visKm: number }>>()
+
+      for (let h = 0; h < totalHours; h++) {
+        const wh = weather?.hourly[h]
+        if (!wh) continue
+        const forecastTime = new Date(wh.time)
+        const hour = forecastTime.getHours()
+        if (hour < 5 || hour > 14) continue
+        const date = wh.time.split('T')[0]
+
+        // Weather conditions for navigation risk
+        if (!diasWeatherMap.has(date)) diasWeatherMap.set(date, [])
+        diasWeatherMap.get(date)!.push({
+          ventoKt: wh.windSpeed10m,
+          ondaM: marine?.hourly[h]?.waveHeight ?? 0,
+          cape: wh.cape,
+          visKm: wh.visibility,
+        })
+      }
+
       for (const hora of horas) {
         const h = new Date(hora.timestamp).getHours()
         if (h < 5 || h > 14) continue
@@ -141,17 +162,29 @@ export async function GET() {
       for (const [date, horasDay] of diasMap) {
         const scores = horasDay.map(h => h.score)
         if (scores.length === 0) continue
-        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-        const max = Math.max(...scores)
-        const bestHour = horasDay.find(h => h.score === max)
+
+        // Check navigation risk during fishing hours
+        const dayWeather = diasWeatherMap.get(date) ?? []
+        const hasNavRisk = dayWeather.some(w =>
+          w.ventoKt >= 25 ||  // vento forte
+          w.ondaM >= 2.5 ||   // mar agitado
+          w.cape >= 1000 ||    // tempestade
+          w.visKm < 1          // nevoeiro
+        )
+
+        const avg = hasNavRisk ? 0 : Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        const max = hasNavRisk ? 0 : Math.max(...scores)
+        const bestHour = hasNavRisk ? null : horasDay.find(h => h.score === max)
         const d = new Date(date + 'T12:00:00')
         const isToday = d.toDateString() === now.toDateString()
 
         let classificacao = 'ruim'
-        if (avg >= 90) classificacao = 'excelente'
-        else if (avg >= 75) classificacao = 'otimo'
-        else if (avg >= 60) classificacao = 'bom'
-        else if (avg >= 45) classificacao = 'regular'
+        if (!hasNavRisk) {
+          if (avg >= 90) classificacao = 'excelente'
+          else if (avg >= 75) classificacao = 'otimo'
+          else if (avg >= 60) classificacao = 'bom'
+          else if (avg >= 45) classificacao = 'regular'
+        }
 
         dias.push({
           date,
@@ -159,7 +192,7 @@ export async function GET() {
           scoreMedio: avg,
           scoreMax: max,
           classificacao,
-          melhorHora: bestHour?.timestamp.split('T')[1]?.slice(0, 5) ?? '',
+          melhorHora: hasNavRisk ? '⚠️ risco' : (bestHour?.timestamp.split('T')[1]?.slice(0, 5) ?? ''),
         })
       }
 
