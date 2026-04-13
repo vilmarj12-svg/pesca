@@ -12,6 +12,7 @@ import { DEFAULT_WEIGHTS, ALERT_THRESHOLD } from '@/engine/constants'
 import { findWindows } from '@/engine/windows'
 import { sendMessage } from '@/telegram/send'
 import { buildAlertMessage, shouldSendAlert, isQuietHours } from '@/telegram/alert'
+import { refreshShips } from '@/fetchers/ships-scraper'
 import type { Pesqueiro } from '@/engine/types'
 
 export async function runRefresh(): Promise<{
@@ -83,14 +84,15 @@ export async function runRefresh(): Promise<{
     const astro = getAstronomy(lats[0], lons[0], now)
     fontes['astronomia'] = 'ok'
 
-    // AIS ships
+    // Refresh ships from web sources + AIS cache
     let navios: ReturnType<typeof getAnchoredShips> = []
     try {
+      await refreshShips()
       cleanupStaleShips()
       navios = getAnchoredShips()
-      fontes['ais'] = navios.length > 0 ? 'ok' : 'vazio'
+      fontes['navios'] = navios.length > 0 ? `ok (${navios.length})` : 'vazio'
     } catch {
-      fontes['ais'] = 'falha'
+      fontes['navios'] = 'falha'
     }
 
     // Load custom weights
