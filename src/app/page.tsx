@@ -8,6 +8,7 @@ import { EspeciesEmAlta } from '@/components/dashboard/EspeciesEmAlta'
 import { IscasEmAlta } from '@/components/dashboard/IscasEmAlta'
 import { HeatmapSemanal } from '@/components/dashboard/HeatmapSemanal'
 import { NaviosRanking } from '@/components/dashboard/NaviosRanking'
+import { Previsao7Dias } from '@/components/dashboard/Previsao7Dias'
 import type { DashboardData } from '@/lib/types'
 import type { Ship } from '@/components/dashboard/MapaPesqueiros'
 
@@ -64,6 +65,17 @@ export default function DashboardPage() {
           </h2>
         </div>
         <RankingTable pesqueiros={data.pesqueiros} />
+      </section>
+
+      <section className="mb-6 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-stone-100 dark:border-stone-800">
+          <h2 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+            📅 Previsão 7 dias — escolha o dia
+          </h2>
+        </div>
+        <div className="p-4">
+          <Previsao7Dias />
+        </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
