@@ -9,8 +9,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy source and build
+# Create temp DB so Next.js build can analyze API routes without failing
 COPY . .
-RUN npm run build
+RUN mkdir -p /data && DATABASE_URL=/data/build.db npm run build && rm -f /data/build.db
 
 # Production
 FROM node:20-slim AS runner
@@ -23,7 +24,6 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/package.json ./
 COPY --from=base /app/src ./src
 COPY --from=base /app/scripts ./scripts
-COPY --from=base /app/drizzle ./drizzle
 
 ENV NODE_ENV=production
 ENV DATABASE_URL=/data/pesca.db

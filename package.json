@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "tsx scripts/setup-db.ts && next build",
-    "start": "next start",
+    "build": "next build",
+    "start": "tsx scripts/setup-db.ts && next start",
     "setup-db": "tsx scripts/setup-db.ts",
     "test": "vitest run",
     "test:watch": "vitest",
