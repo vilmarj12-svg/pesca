@@ -8,14 +8,50 @@ import { getScoreColor } from '@/lib/score-colors'
 import { getMarkerSize, getClassificacaoLabel } from '@/lib/format'
 import type { PesqueiroResumo } from '@/lib/types'
 
+interface Ship {
+  mmsi: number
+  lat: number
+  lon: number
+  nomeNavio: string | null
+  status: string
+  ultimoVistoEm: string
+}
+
 interface MapaPesqueirosProps {
   pesqueiros: PesqueiroResumo[]
   onPesqueiroClick?: (slug: string) => void
 }
 
+function addShipsToMap(map: L.Map, ships: Ship[]) {
+  ships.forEach((s) => {
+    const isAnchored = s.status === 'at_anchor' || s.status === 'fundeado' || s.status === 'atracado'
+    const color = isAnchored ? '#8b5cf6' : '#6b7280'
+    const size = 6
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:${size * 2}px;height:${size * 2}px;background:${color};border:2px solid white;border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,0.4);transform:rotate(45deg)" />`,
+      iconSize: [size * 2, size * 2],
+      iconAnchor: [size, size],
+    })
+
+    const marker = L.marker([s.lat, s.lon], { icon }).addTo(map)
+    const statusLabel = isAnchored ? '⚓ Fundeado' : `🚢 ${s.status}`
+    const name = s.nomeNavio || `MMSI ${s.mmsi}`
+    marker.bindPopup(`
+      <div style="font-family:'Inter',sans-serif;min-width:140px">
+        <div style="font-weight:700;font-size:12px;color:#0f172a;margin-bottom:3px">🚢 ${name}</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:2px">${statusLabel}</div>
+        <div style="font-size:9px;color:#94a3b8;font-family:'JetBrains Mono',monospace">${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}</div>
+      </div>
+    `, { closeButton: false, offset: [0, -size] })
+  })
+}
+
 function initMap(
   container: HTMLDivElement,
   pesqueiros: PesqueiroResumo[],
+  ships: Ship[],
   onPesqueiroClick?: (slug: string) => void,
 ): L.Map {
   const map = L.map(container, {
@@ -77,10 +113,16 @@ function initMap(
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;display:inline-block"></span> 60-79</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span> 40-59</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span> 0-39</span>
+      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px"><span style="width:8px;height:8px;border-radius:2px;background:#8b5cf6;display:inline-block;transform:rotate(45deg)"></span> Navios</span>
     </div>`
     return div
   }
   legend.addTo(map)
+
+  // Add ships
+  if (ships.length > 0) {
+    addShipsToMap(map, ships)
+  }
 
   return map
 }
@@ -90,16 +132,25 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
+  const [ships, setShips] = useState<Ship[]>([])
 
-  // Rebuild map whenever fullscreen changes or pesqueiros change
+  // Fetch ships
+  useEffect(() => {
+    fetch('/api/ships')
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setShips(data) })
+      .catch(() => {})
+  }, [])
+
+  // Rebuild map whenever fullscreen changes, pesqueiros change, or ships load
   const buildMap = useCallback(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove()
       mapInstanceRef.current = null
     }
     if (!mapRef.current) return
-    mapInstanceRef.current = initMap(mapRef.current, pesqueiros, onPesqueiroClick)
-  }, [pesqueiros, onPesqueiroClick])
+    mapInstanceRef.current = initMap(mapRef.current, pesqueiros, ships, onPesqueiroClick)
+  }, [pesqueiros, ships, onPesqueiroClick])
 
   // Initial mount
   useEffect(() => {
