@@ -103,16 +103,38 @@ sqlite.exec(`
   );
 `)
 
-// Check if data exists
+// Check if data exists, seed if empty
 const count = sqlite.prepare('SELECT count(*) as c FROM pesqueiros').get() as { c: number }
 
 if (count.c === 0) {
-  console.log('Database empty — running seed...')
-  sqlite.close()
-  import('../src/db/seed').then(() => {
-    console.log('Seed complete.')
-  })
+  console.log('Database empty — seeding...')
+  // Import seed data arrays and insert directly
+  const { SEED_PESQUEIROS, SEED_ESPECIES, SEED_ISCAS } = await import('../src/db/seed')
+  const { DEFAULT_WEIGHTS } = await import('../src/engine/constants')
+
+  const insertPesqueiro = sqlite.prepare(`INSERT OR IGNORE INTO pesqueiros (slug, nome, lat, lon, tipo, profundidade_m, distancia_costa_mn, especies_alvo, notas, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+  for (const p of SEED_PESQUEIROS) {
+    insertPesqueiro.run(p.slug, p.nome, p.lat, p.lon, p.tipo, (p as any).profundidadeM ?? null, (p as any).distanciaCostaMn ?? null, JSON.stringify(p.especiesAlvo), (p as any).notas ?? null, p.ativo ? 1 : 0)
+  }
+  console.log(`  Inserted ${SEED_PESQUEIROS.length} pesqueiros`)
+
+  const insertEspecie = sqlite.prepare(`INSERT OR IGNORE INTO especies_temporada (especie, meses_ativos, temp_agua_min, temp_agua_max, lua_preferida, tipos_pesqueiro, iscas, tecnica, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+  for (const e of SEED_ESPECIES) {
+    insertEspecie.run(e.especie, JSON.stringify(e.mesesAtivos), e.tempAguaMin, e.tempAguaMax, e.luaPreferida, JSON.stringify(e.tiposPesqueiro), JSON.stringify(e.iscas), e.tecnica, e.notas ?? null)
+  }
+  console.log(`  Inserted ${SEED_ESPECIES.length} espécies`)
+
+  const insertIsca = sqlite.prepare(`INSERT OR IGNORE INTO iscas (nome, tipo, especies_alvo, condicoes_ideais, disponibilidade) VALUES (?, ?, ?, ?, ?)`)
+  for (const i of SEED_ISCAS) {
+    insertIsca.run(i.nome, i.tipo, JSON.stringify(i.especiesAlvo), i.condicoesIdeais ?? null, i.disponibilidade ?? null)
+  }
+  console.log(`  Inserted ${SEED_ISCAS.length} iscas`)
+
+  sqlite.prepare(`INSERT OR IGNORE INTO config (chave, valor) VALUES (?, ?)`).run('pesos', JSON.stringify(DEFAULT_WEIGHTS))
+  console.log('  Inserted config pesos')
+  console.log('Seed complete.')
 } else {
   console.log(`Database OK — ${count.c} pesqueiros found.`)
-  sqlite.close()
 }
+
+sqlite.close()
