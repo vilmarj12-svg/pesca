@@ -7,7 +7,9 @@ import { RankingTable } from '@/components/dashboard/RankingTable'
 import { EspeciesEmAlta } from '@/components/dashboard/EspeciesEmAlta'
 import { IscasEmAlta } from '@/components/dashboard/IscasEmAlta'
 import { HeatmapSemanal } from '@/components/dashboard/HeatmapSemanal'
+import { NaviosRanking } from '@/components/dashboard/NaviosRanking'
 import type { DashboardData } from '@/lib/types'
+import type { Ship } from '@/components/dashboard/MapaPesqueiros'
 
 const MapaPesqueiros = dynamic(
   () => import('@/components/dashboard/MapaPesqueiros').then(m => ({ default: m.MapaPesqueiros })),
@@ -16,6 +18,7 @@ const MapaPesqueiros = dynamic(
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
+  const [ships, setShips] = useState<Ship[]>([])
   const [view, setView] = useState<'hoje' | 'semana'>('hoje')
 
   useEffect(() => {
@@ -23,6 +26,10 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then(setData)
       .catch(console.error)
+    fetch('/api/ships')
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setShips(d) })
+      .catch(() => {})
   }, [])
 
   if (!data) {
@@ -82,6 +89,19 @@ export default function DashboardPage() {
           </div>
         </section>
       </div>
+
+      {ships.length > 0 && (
+        <section className="mb-6 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-stone-100 dark:border-stone-800">
+            <h2 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+              🚢 Navios fundeados — ranking por tempo de ancoragem
+            </h2>
+          </div>
+          <div className="p-4">
+            <NaviosRanking ships={ships} />
+          </div>
+        </section>
+      )}
 
       {data.heatmap.length > 0 && (
         <section className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm overflow-hidden">

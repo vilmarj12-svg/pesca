@@ -8,13 +8,14 @@ import { getScoreColor } from '@/lib/score-colors'
 import { getMarkerSize, getClassificacaoLabel } from '@/lib/format'
 import type { PesqueiroResumo } from '@/lib/types'
 
-interface Ship {
+export interface Ship {
   mmsi: number
   lat: number
   lon: number
   nomeNavio: string | null
-  status: string
+  primeiroVistoEm: string
   ultimoVistoEm: string
+  status: string
 }
 
 interface MapaPesqueirosProps {
@@ -22,11 +23,31 @@ interface MapaPesqueirosProps {
   onPesqueiroClick?: (slug: string) => void
 }
 
+function getAnchorHours(primeiroVistoEm: string): number {
+  return Math.max(0, (Date.now() - new Date(primeiroVistoEm).getTime()) / 3600000)
+}
+
+function getShipColor(hours: number, isAnchored: boolean): string {
+  if (!isAnchored) return '#6b7280' // gray for non-anchored
+  // Verde = mais tempo (bom pra pesca), vermelho = pouco tempo
+  if (hours >= 48) return '#10b981' // emerald — 2+ dias fundeado
+  if (hours >= 24) return '#22c55e' // green — 1-2 dias
+  if (hours >= 12) return '#eab308' // yellow — 12-24h
+  if (hours >= 6) return '#f97316'  // orange — 6-12h
+  return '#ef4444'                   // red — <6h recém chegou
+}
+
+function formatHours(hours: number): string {
+  if (hours >= 24) return `${Math.floor(hours / 24)}d ${Math.floor(hours % 24)}h`
+  return `${Math.floor(hours)}h`
+}
+
 function addShipsToMap(map: L.Map, ships: Ship[]) {
   ships.forEach((s) => {
     const isAnchored = s.status === 'at_anchor' || s.status === 'fundeado' || s.status === 'atracado'
-    const color = isAnchored ? '#8b5cf6' : '#6b7280'
-    const size = 6
+    const hours = getAnchorHours(s.primeiroVistoEm)
+    const color = getShipColor(hours, isAnchored)
+    const size = isAnchored ? (hours >= 24 ? 8 : 6) : 5
 
     const icon = L.divIcon({
       className: '',
@@ -36,10 +57,11 @@ function addShipsToMap(map: L.Map, ships: Ship[]) {
     })
 
     const marker = L.marker([s.lat, s.lon], { icon }).addTo(map)
-    const statusLabel = isAnchored ? '⚓ Fundeado' : `🚢 ${s.status}`
     const name = s.nomeNavio || `MMSI ${s.mmsi}`
+    const statusLabel = isAnchored ? `⚓ Fundeado há ${formatHours(hours)}` : `🚢 ${s.status}`
+
     marker.bindPopup(`
-      <div style="font-family:'Inter',sans-serif;min-width:140px">
+      <div style="font-family:'Inter',sans-serif;min-width:160px">
         <div style="font-weight:700;font-size:12px;color:#0f172a;margin-bottom:3px">🚢 ${name}</div>
         <div style="font-size:11px;color:#64748b;margin-bottom:2px">${statusLabel}</div>
         <div style="font-size:9px;color:#94a3b8;font-family:'JetBrains Mono',monospace">${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}</div>
@@ -113,7 +135,9 @@ function initMap(
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;display:inline-block"></span> 60-79</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span> 40-59</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span> 0-39</span>
-      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px"><span style="width:8px;height:8px;border-radius:2px;background:#8b5cf6;display:inline-block;transform:rotate(45deg)"></span> Navios</span>
+      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px"><span style="width:8px;height:8px;border-radius:2px;background:#10b981;display:inline-block;transform:rotate(45deg)"></span> 2d+</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#eab308;display:inline-block;transform:rotate(45deg)"></span> 12h</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;display:inline-block;transform:rotate(45deg)"></span> novo</span>
     </div>`
     return div
   }
