@@ -93,7 +93,10 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
   useEffect(() => {
     function onFsChange() {
       setFullscreen(!!document.fullscreenElement)
+      // Multiple invalidateSize calls to ensure tiles load after resize
       setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100)
+      setTimeout(() => mapInstanceRef.current?.invalidateSize(), 300)
+      setTimeout(() => mapInstanceRef.current?.invalidateSize(), 600)
     }
     document.addEventListener('fullscreenchange', onFsChange)
     return () => document.removeEventListener('fullscreenchange', onFsChange)
