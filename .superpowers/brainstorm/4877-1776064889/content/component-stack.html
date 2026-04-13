@@ -1,0 +1,50 @@
+<h2>Stack de Componentes UI</h2>
+<p class="subtitle">Como construir os componentes do dashboard?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>shadcn/ui + Radix UI</h3>
+      <p>Componentes copiados pro projeto (Button, Card, Table, Dialog, Toggle, etc). Idêntico ao design-os. Mais setup inicial, mas resultado polido e acessível. Fácil de customizar.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tailwind puro — sem biblioteca de componentes</h3>
+      <p>Escrever tudo na mão com Tailwind. Zero dependências extras. Mais controle total, mas mais código repetitivo. Bom pra projeto pessoal simples.</p>
+    </div>
+  </div>
+</div>
+
+<h2 style="margin-top: 2.5rem;">Bibliotecas de Visualização</h2>
+<p class="subtitle">O PRD especifica Leaflet (mapa) e Recharts (gráficos). Confirmar:</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="leaflet" onclick="toggleSelect(this)">
+    <div class="letter">🗺️</div>
+    <div class="content">
+      <h3>react-leaflet + Leaflet</h3>
+      <p>Mapa interativo com tiles de satélite ESRI. Markers coloridos por score. Já prototipado no design-os.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="recharts" onclick="toggleSelect(this)">
+    <div class="letter">📊</div>
+    <div class="content">
+      <h3>Recharts</h3>
+      <p>Gráfico de barras/linhas pro score 72h no detalhe do pesqueiro. Breakdown horizontal dos fatores.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="lucide" onclick="toggleSelect(this)">
+    <div class="letter">✨</div>
+    <div class="content">
+      <h3>Lucide React (ícones)</h3>
+      <p>Fish, Anchor, Waves, Ship, Navigation, etc. Usado no design-os pra ícones do sidebar e cards.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1rem; border-radius: 8px; background: rgba(59,130,246,0.08);">
+  <p style="margin: 0; font-size: 0.9rem;"><strong>Recomendação:</strong> shadcn/ui pra componentes (já prototipado, resultado profissional) + as 3 libs de visualização (Leaflet, Recharts, Lucide). É mais setup mas é o correto pro resultado que o design-os mostra.</p>
+</div>

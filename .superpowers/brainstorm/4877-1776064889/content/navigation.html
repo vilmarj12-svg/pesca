@@ -1,0 +1,51 @@
+<h2>Navegação e Rotas</h2>
+<p class="subtitle">O design-os tem sidebar com 3 seções. Como estruturar no Next.js App Router?</p>
+
+<div class="mockup">
+  <div class="mockup-header">Estrutura de Rotas</div>
+  <div class="mockup-body" style="font-family: monospace; font-size: 0.85rem; line-height: 1.8; padding: 1.5rem;">
+    <div><strong>/</strong> — Dashboard principal (mapa + ranking + espécies + heatmap)</div>
+    <div><strong>/pesqueiro/[slug]</strong> — Detalhe do pesqueiro (score 72h + breakdown + condições)</div>
+    <div><strong>/admin</strong> — Administração (CRUD pesqueiros + pesos + diagnóstico)</div>
+  </div>
+</div>
+
+<h2 style="margin-top: 2rem;">Layout do App Shell</h2>
+<p class="subtitle">O design-os tem sidebar fixa no desktop e hamburger no mobile. Manter esse padrão?</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Desktop (≥1024px)</div>
+    <div class="mockup-body" style="padding: 1rem;">
+      <div style="display: flex; gap: 0; height: 200px;">
+        <div style="width: 200px; background: #1e293b; color: white; padding: 1rem; border-radius: 8px 0 0 8px; font-size: 0.8rem;">
+          <div style="font-weight: bold; margin-bottom: 1rem;">🎣 Pesca PR</div>
+          <div style="padding: 0.4rem 0; opacity: 1;">📊 Dashboard</div>
+          <div style="padding: 0.4rem 0; opacity: 0.6;">📍 Pesqueiros</div>
+          <div style="padding: 0.4rem 0; opacity: 0.6;">⚙️ Admin</div>
+        </div>
+        <div style="flex: 1; background: #f8fafc; padding: 1rem; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #64748b;">
+          Conteúdo principal
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Mobile (&lt;1024px)</div>
+    <div class="mockup-body" style="padding: 1rem;">
+      <div style="height: 200px;">
+        <div style="background: #1e293b; color: white; padding: 0.8rem 1rem; border-radius: 8px 8px 0 0; font-size: 0.8rem; display: flex; justify-content: space-between;">
+          <span>🎣 Pesca PR</span>
+          <span>☰</span>
+        </div>
+        <div style="flex: 1; background: #f8fafc; padding: 1rem; border-radius: 0 0 8px 8px; font-size: 0.8rem; color: #64748b; height: 160px;">
+          Conteúdo principal (full width)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1rem; border-radius: 8px; background: rgba(59,130,246,0.08);">
+  <p style="margin: 0; font-size: 0.9rem;"><strong>Nota:</strong> As 3 rotas + sidebar/hamburger seguem exatamente o design-os. Sem login — admin protegido só por token na query string conforme PRD.</p>
+</div>

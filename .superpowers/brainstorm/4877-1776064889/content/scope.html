@@ -1,0 +1,30 @@
+<h2>Escopo do Plano 3 — Dashboard</h2>
+<p class="subtitle">Quanto do dashboard implementar agora? O design-os já tem tudo prototipado.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dashboard Completo</h3>
+      <p>Tudo de uma vez: mapa + ranking + espécies/iscas em alta + heatmap semanal + detalhe pesqueiro + admin. Mais trabalho, mas entrega o MVP inteiro do PRD.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Core + Detalhe (sem Admin)</h3>
+      <p>Dashboard principal (mapa, ranking, espécies, heatmap) + página de detalhe do pesqueiro. Admin fica pro Plano 4 junto com Telegram. Foco no consumo de dados.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Mínimo Funcional</h3>
+      <p>Só o dashboard principal: mapa com scores + ranking table + espécies em alta. Sem heatmap, sem detalhe, sem admin. Entrega rápida, vê funcionando antes de investir mais.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1rem; border-radius: 8px; background: rgba(59,130,246,0.08);">
+  <p style="margin: 0; font-size: 0.9rem;"><strong>Minha recomendação:</strong> Opção B — dá pra ver os dados completos de cada pesqueiro sem precisar do admin ainda (os pesqueiros já estão no seed). O admin é útil mas não é bloqueante pro uso diário.</p>
+</div>
