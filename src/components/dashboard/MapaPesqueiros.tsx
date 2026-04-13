@@ -42,18 +42,27 @@ function formatHours(hours: number): string {
   return `${Math.floor(hours)}h`
 }
 
+function shipSvg(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 17L5 7H19L21 17H3Z" fill="${color}" stroke="white" stroke-width="1.5"/>
+    <path d="M12 7V3" stroke="white" stroke-width="1.5"/>
+    <path d="M8 7L12 3L16 7" fill="${color}" stroke="white" stroke-width="1"/>
+    <path d="M2 20C4 18 6 18 8 20C10 18 12 18 14 20C16 18 18 18 20 20C22 18 22 18 22 18" stroke="white" stroke-width="1.2" fill="none" opacity="0.7"/>
+  </svg>`
+}
+
 function addShipsToMap(map: L.Map, ships: Ship[]) {
   ships.forEach((s) => {
     const isAnchored = s.status === 'at_anchor' || s.status === 'fundeado' || s.status === 'atracado'
     const hours = getAnchorHours(s.primeiroVistoEm)
     const color = getShipColor(hours, isAnchored)
-    const size = isAnchored ? (hours >= 96 ? 8 : 6) : 5
+    const size = isAnchored ? (hours >= 96 ? 28 : 24) : 20
 
     const icon = L.divIcon({
       className: '',
-      html: `<div style="width:${size * 2}px;height:${size * 2}px;background:${color};border:2px solid white;border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,0.4);transform:rotate(45deg)" />`,
-      iconSize: [size * 2, size * 2],
-      iconAnchor: [size, size],
+      html: `<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${shipSvg(color, size)}</div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
     })
 
     const marker = L.marker([s.lat, s.lon], { icon }).addTo(map)
@@ -135,9 +144,9 @@ function initMap(
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;display:inline-block"></span> 60-79</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span> 40-59</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span> 0-39</span>
-      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px"><span style="width:8px;height:8px;border-radius:2px;background:#10b981;display:inline-block;transform:rotate(45deg)"></span> 4d+</span>
-      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#eab308;display:inline-block;transform:rotate(45deg)"></span> 1d</span>
-      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;display:inline-block;transform:rotate(45deg)"></span> novo</span>
+      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px">🚢<span style="width:8px;height:8px;background:#10b981;display:inline-block;border-radius:2px"></span> 4d+</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#eab308;display:inline-block;border-radius:2px"></span> 1d</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#ef4444;display:inline-block;border-radius:2px"></span> novo</span>
     </div>`
     return div
   }
