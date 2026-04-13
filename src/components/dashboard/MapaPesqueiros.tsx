@@ -30,10 +30,10 @@ function getAnchorHours(primeiroVistoEm: string): number {
 function getShipColor(hours: number, isAnchored: boolean): string {
   if (!isAnchored) return '#6b7280' // gray for non-anchored
   const days = hours / 24
-  if (days >= 6) return '#059669'  // emerald-600 — 6+ dias
-  if (days >= 5) return '#10b981'  // emerald-500 — 5 dias
-  if (days >= 4) return '#34d399'  // emerald-400 — 4 dias
-  if (days >= 3) return '#6ee7b7'  // emerald-300 — 3 dias
+  if (days >= 6) return '#064e3b'  // emerald-900 — 6+ dias (quase preto-verde)
+  if (days >= 5) return '#065f46'  // emerald-800 — 5 dias
+  if (days >= 4) return '#047857'  // emerald-700 — 4 dias
+  if (days >= 3) return '#059669'  // emerald-600 — 3 dias
   if (days >= 2) return '#eab308'  // yellow-500 — 2 dias
   if (days >= 1) return '#f97316'  // orange-500 — 1 dia
   return '#ef4444'                  // red-500 — <1 dia
@@ -147,8 +147,8 @@ function initMap(
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;display:inline-block"></span> 60-79</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span> 40-59</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span> 0-39</span>
-      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px">🚢<span style="width:8px;height:8px;background:#059669;display:inline-block;border-radius:2px"></span> 6d+</span>
-      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#6ee7b7;display:inline-block;border-radius:2px"></span> 3d</span>
+      <span style="display:flex;align-items:center;gap:3px;margin-left:6px;border-left:1px solid #e2e8f0;padding-left:6px">🚢<span style="width:8px;height:8px;background:#064e3b;display:inline-block;border-radius:2px"></span> 6d+</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#059669;display:inline-block;border-radius:2px"></span> 3d</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#eab308;display:inline-block;border-radius:2px"></span> 2d</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#f97316;display:inline-block;border-radius:2px"></span> 1d</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#ef4444;display:inline-block;border-radius:2px"></span> novo</span>
