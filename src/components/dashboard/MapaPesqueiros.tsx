@@ -56,6 +56,7 @@ function initMap(
           <span style="font-size:11px;color:#64748b">${getClassificacaoLabel(p.classificacao)}</span>
         </div>
         ${p.proximaJanela ? `<div style="font-size:10px;color:#94a3b8">Janela: ${p.proximaJanela}</div>` : ''}
+        <div style="font-size:9px;color:#94a3b8;margin-top:4px;font-family:'JetBrains Mono',monospace">${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</div>
       </div>
     `, { closeButton: false, offset: [0, -size] })
 
