@@ -88,25 +88,35 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
     return () => { map.remove(); mapInstanceRef.current = null }
   }, [pesqueiros, onPesqueiroClick])
 
+  const containerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    if (mapInstanceRef.current) {
-      setTimeout(() => mapInstanceRef.current?.invalidateSize(), 200)
+    function onFsChange() {
+      setFullscreen(!!document.fullscreenElement)
+      setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100)
     }
-  }, [fullscreen])
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  function toggleFullscreen() {
+    if (!containerRef.current) return
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      containerRef.current.requestFullscreen()
+    }
+  }
 
   return (
-    <div className={`relative ${fullscreen ? 'fixed inset-0 z-50' : ''}`}>
-      {fullscreen && (
-        <div className="absolute inset-0 bg-black/50 -z-10" onClick={() => setFullscreen(false)} />
-      )}
+    <div ref={containerRef} className="relative">
       <div
         ref={mapRef}
-        className={`${fullscreen ? 'h-full w-full' : 'h-[320px] sm:h-[400px] lg:h-[450px]'} rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700`}
-        style={{ zIndex: fullscreen ? 50 : 0 }}
+        className={`${fullscreen ? 'h-screen w-screen' : 'h-[320px] sm:h-[400px] lg:h-[450px]'} rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700`}
       />
       <button
-        onClick={() => setFullscreen((f) => !f)}
-        className="absolute top-3 right-3 z-[60] p-2 rounded-lg bg-white/90 dark:bg-stone-800/90 shadow-md hover:bg-white dark:hover:bg-stone-700 transition-colors cursor-pointer"
+        onClick={toggleFullscreen}
+        className="absolute top-3 right-3 z-[1000] p-2 rounded-lg bg-white/90 dark:bg-stone-800/90 shadow-md hover:bg-white dark:hover:bg-stone-700 transition-colors cursor-pointer"
         title={fullscreen ? 'Minimizar mapa' : 'Maximizar mapa'}
       >
         {fullscreen
