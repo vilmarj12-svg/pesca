@@ -22,6 +22,7 @@ RUN mkdir -p /data
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/package.json ./
+COPY --from=base /app/tsconfig.json ./
 COPY --from=base /app/src ./src
 COPY --from=base /app/scripts ./scripts
 
