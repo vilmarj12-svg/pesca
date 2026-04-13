@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { SEED_PESQUEIROS, SEED_ESPECIES, SEED_ISCAS } from '@/db/seed'
 
 describe('seed data', () => {
-  it('has 39 pesqueiros', () => { expect(SEED_PESQUEIROS).toHaveLength(39) })
+  it('has 47 pesqueiros', () => { expect(SEED_PESQUEIROS).toHaveLength(47) })
   it('all pesqueiros have required fields', () => {
     for (const p of SEED_PESQUEIROS) {
       expect(p.slug).toBeTruthy()
