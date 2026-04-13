@@ -42,7 +42,7 @@ export function CondicoesTable({ condicoes }: { condicoes: CondicaoBruta[] }) {
               <td className="py-2.5 px-2">
                 <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${getScoreBadgeClass(c.score)}`}>{c.score}</span>
               </td>
-              <td className="py-2.5 px-2 text-stone-600 dark:text-stone-400">{c.ventoVelocidade}kt {windDirection(c.ventoDirecao)}</td>
+              <td className="py-2.5 px-2 text-stone-600 dark:text-stone-400">{Math.round(c.ventoVelocidade * 1.852)}km/h {windDirection(c.ventoDirecao)}</td>
               <td className="py-2.5 px-2 text-stone-600 dark:text-stone-400">{c.ondaAltura}m T={c.ondaPeriodo}s</td>
               <td className="py-2.5 px-2 text-stone-600 dark:text-stone-400">{c.mareAltura}m <MareFaseIcon fase={c.mareFase} /></td>
               <td className="py-2.5 px-2 text-stone-600 dark:text-stone-400">{c.pressao} <TendenciaIcon tendencia={c.pressaoTendencia} /></td>

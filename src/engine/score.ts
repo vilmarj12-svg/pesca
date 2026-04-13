@@ -21,7 +21,7 @@ export function calculateScore(
 
   const fatores: FatorBreakdown[] = [
     { nome: 'mare', peso: pesos.mare, valorBruto: `${condicoes.mareAlturaM}m ${condicoes.mareFase}`, scoreNorm: scoreTide(condicoes.mareFase, condicoes.mareAmplitude), contribuicao: 0 },
-    { nome: 'vento', peso: pesos.vento, valorBruto: `${Math.round(condicoes.ventoVelocidadeKt * 10) / 10}kt ${windDirection(condicoes.ventoDirecaoGraus)}`, scoreNorm: scoreWind(condicoes.ventoVelocidadeKt, condicoes.ventoDirecaoGraus), contribuicao: 0 },
+    { nome: 'vento', peso: pesos.vento, valorBruto: `${Math.round(condicoes.ventoVelocidadeKt * 1.852)} km/h ${windDirection(condicoes.ventoDirecaoGraus)}`, scoreNorm: scoreWind(condicoes.ventoVelocidadeKt, condicoes.ventoDirecaoGraus), contribuicao: 0 },
     { nome: 'onda', peso: pesos.onda, valorBruto: `${Math.round(condicoes.ondaAlturaM * 10) / 10}m T=${Math.round(condicoes.ondaPeriodoS)}s`, scoreNorm: scoreWave(condicoes.ondaAlturaM, condicoes.ondaPeriodoS), contribuicao: 0 },
     { nome: 'lua', peso: pesos.lua, valorBruto: `${Math.round(condicoes.luaIluminacao * 100)}% iluminação`, scoreNorm: scoreMoon(condicoes.luaIluminacao), contribuicao: 0 },
     { nome: 'pressao', peso: pesos.pressao, valorBruto: `${Math.round(condicoes.pressaoHpa)} hPa (Δ${condicoes.pressaoVariacao12h > 0 ? '+' : ''}${Math.round(condicoes.pressaoVariacao12h * 10) / 10})`, scoreNorm: scorePressure(condicoes.pressaoHpa, condicoes.pressaoVariacao12h), contribuicao: 0 },
