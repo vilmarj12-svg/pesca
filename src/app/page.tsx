@@ -8,6 +8,7 @@ import { RankingTable } from '@/components/dashboard/RankingTable'
 import { EspeciesEmAlta } from '@/components/dashboard/EspeciesEmAlta'
 import { IscasEmAlta } from '@/components/dashboard/IscasEmAlta'
 import { NaviosRanking } from '@/components/dashboard/NaviosRanking'
+import { AlertasNavegacao } from '@/components/dashboard/AlertasNavegacao'
 import { formatTimestamp, getClassificacaoLabel } from '@/lib/format'
 import { getScoreBadgeClass } from '@/lib/score-colors'
 import type { DashboardData, PesqueiroResumo } from '@/lib/types'
@@ -38,9 +39,19 @@ interface PesqueiroForecast {
   melhorDia: DayForecast
 }
 
+interface AlertaData {
+  tipo: string
+  severidade: 'perigo' | 'atencao' | 'aviso'
+  titulo: string
+  descricao: string
+  periodo: string
+  icone: string
+}
+
 interface ForecastData {
   pesqueiros: PesqueiroForecast[]
   rankingMelhorDia: Array<{ slug: string; nome: string } & DayForecast>
+  alertas: AlertaData[]
 }
 
 function getDayColor(score: number): string {
@@ -232,6 +243,16 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Alertas de navegação */}
+      {forecast?.alertas && (
+        <section className="mb-6">
+          <h2 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-3">
+            ⚠️ Alertas de navegação — próximos 7 dias
+          </h2>
+          <AlertasNavegacao alertas={forecast.alertas} />
+        </section>
       )}
 
       {/* Map - scores reflect selected day */}

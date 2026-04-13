@@ -9,6 +9,7 @@ import { getAnchoredShips } from '@/fetchers/ais'
 import { buildCondicoes } from '@/cron/build-condicoes'
 import { calculateScore } from '@/engine/score'
 import { DEFAULT_WEIGHTS } from '@/engine/constants'
+import { detectAlertasNavegacao, type AlertaNavegacao } from '@/lib/alertas-navegacao'
 import type { Pesqueiro } from '@/engine/types'
 
 export const dynamic = 'force-dynamic'
@@ -176,9 +177,32 @@ export async function GET() {
       .map(p => ({ slug: p.slug, nome: p.nome, ...p.melhorDia }))
       .sort((a, b) => b.scoreMedio - a.scoreMedio)
 
+    // Alertas de navegação (usa dados do primeiro ponto como referência geral)
+    const refWeather = weatherData?.[0]
+    const refMarine = marineData?.[0]
+    const condicoesAlerta = (refWeather?.hourly ?? []).map((wh, i) => {
+      const mh = refMarine?.hourly[i]
+      const pressaoSlice = refWeather?.hourly.slice(Math.max(0, i - 12), i + 1).map(x => x.pressureMsl) ?? []
+      const pressaoVar = pressaoSlice.length >= 2 ? pressaoSlice[pressaoSlice.length - 1] - pressaoSlice[0] : 0
+      return {
+        timestamp: wh.time,
+        ventoKt: wh.windSpeed10m,
+        ventoDirecao: wh.windDirection10m,
+        ondaM: mh?.waveHeight ?? 0,
+        ondaPeriodoS: mh?.wavePeriod ?? 8,
+        visibilidadeKm: wh.visibility,
+        capeJkg: wh.cape,
+        precipitacaoMm: wh.precipitation,
+        pressaoHpa: wh.pressureMsl,
+        pressaoVariacao: pressaoVar,
+      }
+    })
+    const alertas = detectAlertasNavegacao(condicoesAlerta)
+
     return NextResponse.json({
       pesqueiros: result,
       rankingMelhorDia,
+      alertas,
       geradoEm: now.toISOString(),
     })
   } catch (e) {
