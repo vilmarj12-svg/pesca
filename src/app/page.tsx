@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Clock, CheckCircle, AlertTriangle, XCircle, Trophy, ChevronRight, Calendar } from 'lucide-react'
@@ -92,9 +92,10 @@ export default function DashboardPage() {
   const [ships, setShips] = useState<Ship[]>([])
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
-  useEffect(() => {
-    Promise.all([
+  const loadAllData = useCallback(() => {
+    return Promise.all([
       fetch('/api/dashboard').then(r => r.json()),
       fetch('/api/forecast').then(r => r.json()),
       fetch('/api/ships').then(r => r.json()).catch(() => []),
@@ -102,12 +103,21 @@ export default function DashboardPage() {
       setDashData(dash)
       setForecast(fc)
       if (Array.isArray(sh)) setShips(sh)
-      // Default to today
-      if (fc?.pesqueiros?.[0]?.dias?.[0]) {
+      if (!selectedDay && fc?.pesqueiros?.[0]?.dias?.[0]) {
         setSelectedDay(fc.pesqueiros[0].dias[0].date)
       }
+      setLastUpdate(new Date())
     }).catch(console.error).finally(() => setLoading(false))
-  }, [])
+  }, [selectedDay])
+
+  // Initial load
+  useEffect(() => { loadAllData() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-refresh every 10 minutes
+  useEffect(() => {
+    const interval = setInterval(() => { loadAllData() }, 10 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [loadAllData])
 
   // Build pesqueiro data for selected day
   const dayPesqueiros: PesqueiroResumo[] = useMemo(() => {
@@ -187,6 +197,7 @@ export default function DashboardPage() {
               <span className="font-mono">{formatTimestamp(dashData.runStatus.ultimaRun)}</span>
             </div>
             <StatusBadge status={dashData.runStatus.status} />
+            <span className="text-[9px] text-stone-300 dark:text-stone-600">auto 10min</span>
           </div>
         )}
       </div>
