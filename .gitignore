@@ -4,3 +4,23 @@ data/
 .env
 .env.local
 *.db
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Superpowers
+.superpowers/
+
+# MCP
+.mcp.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

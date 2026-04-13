@@ -1,4 +1,5 @@
 import { db } from '@/db'
+import { clearCache } from '@/lib/cache'
 import { pesqueiros, snapshots, runs, config, alertasEnviados } from '@/db/schema'
 import { eq, desc, gte } from 'drizzle-orm'
 import { fetchWeather } from '@/fetchers/open-meteo'
@@ -245,6 +246,9 @@ export async function runRefresh(): Promise<{
       })
       .where(eq(runs.id, run.id))
       .run()
+
+    // Invalidate caches so next request gets fresh data
+    clearCache()
 
     return { runId: run.id, status, pesqueirosProcessados: processados, alertasEnviados: alertasEnviadosCount }
 

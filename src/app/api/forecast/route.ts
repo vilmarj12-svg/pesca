@@ -10,9 +10,12 @@ import { buildCondicoes } from '@/cron/build-condicoes'
 import { calculateScore } from '@/engine/score'
 import { DEFAULT_WEIGHTS } from '@/engine/constants'
 import { detectAlertasNavegacao, type AlertaNavegacao } from '@/lib/alertas-navegacao'
+import { getCached, setCache } from '@/lib/cache'
 import type { Pesqueiro } from '@/engine/types'
 
 export const dynamic = 'force-dynamic'
+const CACHE_KEY = 'forecast'
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
 interface HourForecast {
   timestamp: string
@@ -43,6 +46,10 @@ interface PesqueiroForecast {
 
 export async function GET() {
   try {
+    // Return cached if available
+    const cached = getCached(CACHE_KEY)
+    if (cached) return NextResponse.json(cached)
+
     const allPesqueiros = db
       .select()
       .from(pesqueiros)
@@ -250,12 +257,14 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({
+    const response = {
       pesqueiros: result,
       rankingMelhorDia,
       alertasPorDia,
       geradoEm: now.toISOString(),
-    })
+    }
+    setCache(CACHE_KEY, response, CACHE_TTL)
+    return NextResponse.json(response)
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     return NextResponse.json({ error: message }, { status: 500 })
