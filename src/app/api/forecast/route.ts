@@ -126,9 +126,11 @@ export async function GET() {
         })
       }
 
-      // Group by day
+      // Group by day — only fishing hours (05:00 to 14:00)
       const diasMap = new Map<string, HourForecast[]>()
       for (const hora of horas) {
+        const h = new Date(hora.timestamp).getHours()
+        if (h < 5 || h > 14) continue
         const date = hora.timestamp.split('T')[0]
         if (!diasMap.has(date)) diasMap.set(date, [])
         diasMap.get(date)!.push(hora)
@@ -137,6 +139,7 @@ export async function GET() {
       const dias: DayForecast[] = []
       for (const [date, horasDay] of diasMap) {
         const scores = horasDay.map(h => h.score)
+        if (scores.length === 0) continue
         const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
         const max = Math.max(...scores)
         const bestHour = horasDay.find(h => h.score === max)
