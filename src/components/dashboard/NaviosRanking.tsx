@@ -16,18 +16,18 @@ function formatDuration(hours: number): string {
 }
 
 function getTimeColor(hours: number): string {
-  if (hours >= 48) return 'bg-emerald-500 text-white'
-  if (hours >= 24) return 'bg-green-500 text-white'
-  if (hours >= 12) return 'bg-yellow-500 text-yellow-900'
-  if (hours >= 6) return 'bg-orange-500 text-white'
+  if (hours >= 96) return 'bg-emerald-500 text-white'
+  if (hours >= 48) return 'bg-green-500 text-white'
+  if (hours >= 24) return 'bg-yellow-500 text-yellow-900'
+  if (hours >= 12) return 'bg-orange-500 text-white'
   return 'bg-red-500 text-white'
 }
 
 function getTimeBg(hours: number): string {
-  if (hours >= 48) return 'border-l-emerald-500'
-  if (hours >= 24) return 'border-l-green-500'
-  if (hours >= 12) return 'border-l-yellow-500'
-  if (hours >= 6) return 'border-l-orange-500'
+  if (hours >= 96) return 'border-l-emerald-500'
+  if (hours >= 48) return 'border-l-green-500'
+  if (hours >= 24) return 'border-l-yellow-500'
+  if (hours >= 12) return 'border-l-orange-500'
   return 'border-l-red-500'
 }
 
