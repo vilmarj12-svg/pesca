@@ -1,19 +1,23 @@
 import { db } from '@/db'
-import { pesqueiros, snapshots, runs, config } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { pesqueiros, snapshots, runs, config, alertasEnviados } from '@/db/schema'
+import { eq, desc, gte } from 'drizzle-orm'
 import { fetchWeather } from '@/fetchers/open-meteo'
 import { fetchMarine } from '@/fetchers/open-meteo-marine'
 import { getAstronomy } from '@/fetchers/astronomy'
 import { getAnchoredShips, cleanupStaleShips } from '@/fetchers/ais'
 import { buildCondicoes } from './build-condicoes'
 import { calculateScore } from '@/engine/score'
-import { DEFAULT_WEIGHTS } from '@/engine/constants'
+import { DEFAULT_WEIGHTS, ALERT_THRESHOLD } from '@/engine/constants'
+import { findWindows } from '@/engine/windows'
+import { sendMessage } from '@/telegram/send'
+import { buildAlertMessage, shouldSendAlert, isQuietHours } from '@/telegram/alert'
 import type { Pesqueiro } from '@/engine/types'
 
 export async function runRefresh(): Promise<{
   runId: number
   status: 'sucesso' | 'parcial' | 'erro'
   pesqueirosProcessados: number
+  alertasEnviados?: number
   erro?: string
 }> {
   const rows = db.insert(runs).values({ status: 'sucesso' }).returning().all()
@@ -164,6 +168,73 @@ export async function runRefresh(): Promise<{
       processados++
     }
 
+    // Check for excellent windows and send alerts
+    let alertasEnviadosCount = 0
+    const currentHour = now.getHours()
+
+    if (!isQuietHours(currentHour)) {
+      const todayStart = new Date(now)
+      todayStart.setHours(0, 0, 0, 0)
+      const todayAlerts = db
+        .select()
+        .from(alertasEnviados)
+        .where(gte(alertasEnviados.enviadoEm, todayStart.toISOString()))
+        .all()
+
+      for (const p of allPesqueiros) {
+        const recentSnaps = db
+          .select()
+          .from(snapshots)
+          .where(eq(snapshots.pesqueiroId, p.id))
+          .orderBy(desc(snapshots.id))
+          .limit(72)
+          .all()
+
+        const windows = findWindows(
+          recentSnaps.map((s) => ({
+            pesqueiroId: s.pesqueiroId,
+            timestamp: s.timestamp,
+            score: s.score,
+            classificacao: s.classificacao as any,
+          }))
+        )
+
+        for (const w of windows) {
+          if (w.scoreMedio < ALERT_THRESHOLD) continue
+
+          const existing = todayAlerts
+            .filter((a) => a.pesqueiroId === p.id)
+            .map((a) => ({
+              scoreMedio: a.scoreMedio,
+              janelaInicio: a.janelaInicio,
+              janelaFim: a.janelaFim,
+            }))
+
+          if (!shouldSendAlert(w.scoreMedio, existing, todayAlerts.length)) continue
+
+          const latestBreakdown = recentSnaps[0]?.breakdown as Record<string, any> | undefined
+          const fatores = (latestBreakdown?.fatores as any[]) ?? []
+
+          const startDate = new Date(w.inicio)
+          const endDate = new Date(w.fim)
+          const janelaDesc = `${startDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}, ${startDate.getHours().toString().padStart(2, '0')}:00-${endDate.getHours().toString().padStart(2, '0')}:00`
+
+          const text = buildAlertMessage(p.nome, w.scoreMedio, janelaDesc, fatores)
+          const sent = await sendMessage(text)
+
+          if (sent) {
+            db.insert(alertasEnviados).values({
+              pesqueiroId: p.id,
+              janelaInicio: w.inicio,
+              janelaFim: w.fim,
+              scoreMedio: w.scoreMedio,
+            }).run()
+            alertasEnviadosCount++
+          }
+        }
+      }
+    }
+
     const status = fontes['open_meteo'] === 'ok' && fontes['marine'] === 'ok' ? 'sucesso' : 'parcial'
 
     db.update(runs)
@@ -175,7 +246,7 @@ export async function runRefresh(): Promise<{
       .where(eq(runs.id, run.id))
       .run()
 
-    return { runId: run.id, status, pesqueirosProcessados: processados }
+    return { runId: run.id, status, pesqueirosProcessados: processados, alertasEnviados: alertasEnviadosCount }
 
   } catch (e) {
     const erro = e instanceof Error ? e.message : String(e)
