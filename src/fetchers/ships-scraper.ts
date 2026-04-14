@@ -121,19 +121,21 @@ export async function refreshShips(): Promise<{ total: number; updated: number }
   const now = new Date().toISOString()
   let updated = 0
 
-  // Update ultimo_visto_em for existing ships, insert new ones
+  // 1. Remove all ships in transit ("navegando") — they should only appear on real AIS
+  //    data. Without real-time tracking, we cannot reliably show moving ships.
+  db.delete(cacheNavios).where(sql`${cacheNavios.status} = 'navegando'`).run()
+
+  // 2. Update ultimo_visto_em for existing anchored/docked ships, insert new ones
   for (const ship of knownShips) {
+    // Skip ships marked as canal/transit — we won't show them without real AIS data
+    if (ship.area === 'canal') continue
+
     let pos: { lat: number; lon: number }
     let status: string
 
     if (ship.area === 'port') {
       pos = generatePortPosition(knownShips.indexOf(ship))
       status = 'atracado'
-    } else if (ship.area === 'canal') {
-      // Canal positions
-      const canalIdx = knownShips.filter(s => s.area === 'canal').indexOf(ship)
-      pos = { lat: -25.575 - canalIdx * 0.005, lon: -48.310 + canalIdx * 0.005 }
-      status = 'navegando'
     } else {
       pos = generateAnchorPosition(knownShips.indexOf(ship))
       status = 'at_anchor'
@@ -143,9 +145,9 @@ export async function refreshShips(): Promise<{ total: number; updated: number }
     const existing = db.select().from(cacheNavios).where(sql`${cacheNavios.mmsi} = ${ship.mmsi}`).get()
 
     if (existing) {
-      // Update last seen time
+      // Update last seen time — keep position stable (anchored ships don't move much)
       db.update(cacheNavios)
-        .set({ ultimoVistoEm: now, lat: pos.lat, lon: pos.lon })
+        .set({ ultimoVistoEm: now })
         .where(sql`${cacheNavios.mmsi} = ${ship.mmsi}`)
         .run()
     } else {
