@@ -29,7 +29,7 @@ export default function PesqueiroPage({ params }: { params: Promise<{ slug: stri
 
   if (!data) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto animate-pulse space-y-6">
+      <div className="p-3 sm:p-6 lg:p-8 max-w-5xl mx-auto animate-pulse space-y-6">
         <div className="h-8 bg-stone-200 dark:bg-stone-800 rounded w-48" />
         <div className="h-[180px] bg-stone-200 dark:bg-stone-800 rounded-xl" />
         <div className="h-[300px] bg-stone-200 dark:bg-stone-800 rounded-xl" />
@@ -38,7 +38,7 @@ export default function PesqueiroPage({ params }: { params: Promise<{ slug: stri
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+    <div className="p-3 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       <PesqueiroHeader pesqueiro={data.pesqueiro} breakdown={data.breakdown} />
 
       <section className="mb-6 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm overflow-hidden">

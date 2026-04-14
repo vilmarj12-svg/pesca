@@ -52,7 +52,7 @@ function AdminPage() {
 
   if (status === 'loading') {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto animate-pulse space-y-6">
+      <div className="p-3 sm:p-6 lg:p-8 max-w-5xl mx-auto animate-pulse space-y-6">
         <div className="h-8 bg-stone-200 dark:bg-stone-800 rounded w-48" />
         <div className="h-[200px] bg-stone-200 dark:bg-stone-800 rounded-xl" />
       </div>
@@ -71,7 +71,7 @@ function AdminPage() {
   const ativos = pesqueiros.filter((p) => p.ativo).length
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-3 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50 tracking-tight font-display">
         Administração
       </h1>

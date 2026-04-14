@@ -92,19 +92,19 @@ export default function NaviosPage() {
   const totalSailing = ships.filter((s) => s.status === 'navegando').length
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="flex items-center gap-3 mb-2">
-        <Ship className="w-7 h-7 text-blue-600" />
-        <h1 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50 tracking-tight font-display">
+    <div className="p-3 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="flex items-center gap-2 sm:gap-3 mb-2">
+        <Ship className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
+        <h1 className="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-50 tracking-tight font-display">
           Navios
         </h1>
       </div>
-      <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">
+      <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mb-4 sm:mb-6">
         {ships.length} navios na região do porto de Paranaguá
       </p>
 
       {/* Filter pills */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1 -mx-3 px-3 sm:mx-0 sm:px-0">
         {[
           { id: 'todos', label: 'Todos', count: ships.length },
           { id: 'fundeados', label: '⚓ Fundeados', count: totalAnchored },
@@ -114,7 +114,7 @@ export default function NaviosPage() {
           <button
             key={f.id}
             onClick={() => setFilter(f.id as typeof filter)}
-            className={`flex-shrink-0 px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+            className={`flex-shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer ${
               filter === f.id
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
