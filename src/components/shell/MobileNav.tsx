@@ -28,13 +28,13 @@ export function MobileNav() {
 
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/30 dark:bg-black/50 md:hidden"
+          className="fixed inset-0 z-[9998] bg-black/30 dark:bg-black/50 md:hidden"
           onClick={() => setOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-stone-50 dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800
+        className={`fixed inset-y-0 left-0 z-[9999] w-64 flex flex-col bg-stone-50 dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800
           transform transition-transform duration-200 ease-out md:hidden
           ${open ? 'translate-x-0' : '-translate-x-full'}
         `}
