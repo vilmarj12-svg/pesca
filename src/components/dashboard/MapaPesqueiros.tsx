@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { Maximize2, Minimize2, Crosshair } from 'lucide-react'
 import { getScoreColor } from '@/lib/score-colors'
 import { getMarkerSize, getClassificacaoLabel } from '@/lib/format'
 import type { PesqueiroResumo } from '@/lib/types'
@@ -169,8 +169,11 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
+  const userMarkerRef = useRef<L.Marker | null>(null)
+  const userAccuracyRef = useRef<L.Circle | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const [ships, setShips] = useState<Ship[]>([])
+  const [userPos, setUserPos] = useState<GeolocationPosition | null>(null)
 
   // Fetch ships
   useEffect(() => {
@@ -180,12 +183,64 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
       .catch(() => {})
   }, [])
 
+  // Track user location in real-time
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => setUserPos(pos),
+      (err) => console.log('Geolocation:', err.message),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+    )
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [])
+
+  // Update user marker on map when position changes
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map || !userPos) return
+
+    const { latitude, longitude, accuracy } = userPos.coords
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLatLng([latitude, longitude])
+      userAccuracyRef.current?.setLatLng([latitude, longitude]).setRadius(accuracy)
+    } else {
+      // Blue pulsing dot for user location
+      const userIcon = L.divIcon({
+        className: '',
+        html: `<div style="position:relative;width:16px;height:16px">
+          <div style="position:absolute;top:0;left:0;width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.5)"></div>
+          <div style="position:absolute;top:-4px;left:-4px;width:24px;height:24px;background:#3b82f6;border-radius:50%;opacity:0.3;animation:pulse 2s infinite"></div>
+        </div>
+        <style>
+          @keyframes pulse { 0% { transform: scale(1); opacity: 0.3 } 70% { transform: scale(2); opacity: 0 } 100% { transform: scale(2); opacity: 0 } }
+        </style>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      })
+
+      userMarkerRef.current = L.marker([latitude, longitude], { icon: userIcon, zIndexOffset: 10000 })
+        .bindPopup(`<div style="font-family:'Inter',sans-serif"><b>🧭 Você está aqui</b><br><span style="font-size:10px;color:#64748b">Precisão: ${Math.round(accuracy)}m</span></div>`, { closeButton: false })
+        .addTo(map)
+
+      userAccuracyRef.current = L.circle([latitude, longitude], {
+        radius: accuracy,
+        color: '#3b82f6',
+        weight: 1,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.1,
+      }).addTo(map)
+    }
+  }, [userPos])
+
   // Rebuild map whenever fullscreen changes, pesqueiros change, or ships load
   const buildMap = useCallback(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove()
       mapInstanceRef.current = null
     }
+    userMarkerRef.current = null
+    userAccuracyRef.current = null
     if (!mapRef.current) return
     mapInstanceRef.current = initMap(mapRef.current, pesqueiros, ships, onPesqueiroClick)
   }, [pesqueiros, ships, onPesqueiroClick])
@@ -243,6 +298,20 @@ export function MapaPesqueiros({ pesqueiros, onPesqueiroClick }: MapaPesqueirosP
           : <Maximize2 className="w-4 h-4 text-stone-700 dark:text-stone-200" />
         }
       </button>
+      {userPos && (
+        <button
+          onClick={() => {
+            const map = mapInstanceRef.current
+            if (map && userPos) {
+              map.setView([userPos.coords.latitude, userPos.coords.longitude], 14)
+            }
+          }}
+          className="absolute top-14 right-3 z-[1000] p-2 rounded-lg bg-blue-600 text-white shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+          title="Centralizar na minha localização"
+        >
+          <Crosshair className="w-4 h-4" />
+        </button>
+      )}
     </div>
   )
 }
