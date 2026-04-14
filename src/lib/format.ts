@@ -37,8 +37,8 @@ export function getClassificacaoStars(c: string): string {
 }
 
 export function getMarkerSize(score: number): number {
-  if (score >= 80) return 14
-  if (score >= 60) return 12
-  if (score >= 40) return 10
-  return 8
+  if (score >= 80) return 7
+  if (score >= 60) return 6
+  if (score >= 40) return 5
+  return 4
 }

@@ -59,7 +59,7 @@ function addShipsToMap(map: L.Map, ships: Ship[]) {
     const hours = getAnchorHours(s.primeiroVistoEm)
     const color = getShipColor(hours, isAnchored)
     const days = hours / 24
-    const size = !isAnchored ? 20 : days >= 6 ? 30 : days >= 3 ? 26 : 22
+    const size = !isAnchored ? 12 : days >= 6 ? 18 : days >= 3 ? 15 : 13
 
     const icon = L.divIcon({
       className: '',
@@ -111,7 +111,7 @@ function initMap(
 
     const icon = L.divIcon({
       className: '',
-      html: `<div style="width:${size * 2}px;height:${size * 2}px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;transition:transform 0.15s" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'" />`,
+      html: `<div style="width:${size * 2}px;height:${size * 2}px;background:${color};border:1.5px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.4);cursor:pointer;transition:transform 0.15s" onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform='scale(1)'" />`,
       iconSize: [size * 2, size * 2],
       iconAnchor: [size, size],
     })
