@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, MapPin, Settings, Fish, Ship } from 'lucide-react'
+import { LayoutDashboard, MapPin, Settings, Fish, Ship, Route } from 'lucide-react'
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Pesqueiros', href: '/pesqueiro', icon: MapPin },
   { label: 'Navios', href: '/navios', icon: Ship },
+  { label: 'Minhas Pescarias', href: '/pescarias', icon: Route },
   { label: 'Admin', href: '/admin', icon: Settings },
 ]
 

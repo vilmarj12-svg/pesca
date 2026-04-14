@@ -101,6 +101,51 @@ sqlite.exec(`
     ultimo_visto_em TEXT NOT NULL,
     status TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS pescarias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    iniciada_em TEXT NOT NULL DEFAULT (datetime('now')),
+    terminada_em TEXT,
+    notas TEXT,
+    condicoes TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS pescaria_pontos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pescaria_id INTEGER NOT NULL REFERENCES pescarias(id) ON DELETE CASCADE,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+    accuracy REAL,
+    speed REAL
+  );
+
+  CREATE TABLE IF NOT EXISTS pescaria_visitas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pescaria_id INTEGER NOT NULL REFERENCES pescarias(id) ON DELETE CASCADE,
+    pesqueiro_id INTEGER REFERENCES pesqueiros(id),
+    nome_personalizado TEXT,
+    lat REAL,
+    lon REAL,
+    hora_inicio TEXT NOT NULL DEFAULT (datetime('now')),
+    hora_fim TEXT,
+    especie TEXT,
+    quantidade INTEGER,
+    isca TEXT,
+    tecnica TEXT,
+    notas TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS pescaria_fotos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pescaria_id INTEGER NOT NULL REFERENCES pescarias(id) ON DELETE CASCADE,
+    data_url TEXT NOT NULL,
+    legenda TEXT,
+    lat REAL,
+    lon REAL,
+    timestamp TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `)
 
 // Check if data exists, seed if empty

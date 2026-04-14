@@ -85,3 +85,48 @@ export const cacheNavios = sqliteTable('cache_navios', {
   ultimoVistoEm: text('ultimo_visto_em').notNull(),
   status: text('status').notNull(),
 })
+
+export const pescarias = sqliteTable('pescarias', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  titulo: text('titulo').notNull(),
+  iniciadaEm: text('iniciada_em').notNull().default(sql`(datetime('now'))`),
+  terminadaEm: text('terminada_em'),
+  notas: text('notas'),
+  condicoes: text('condicoes', { mode: 'json' }).$type<Record<string, unknown>>(),
+})
+
+export const pescariaPontos = sqliteTable('pescaria_pontos', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  pescariaId: integer('pescaria_id').notNull().references(() => pescarias.id, { onDelete: 'cascade' }),
+  lat: real('lat').notNull(),
+  lon: real('lon').notNull(),
+  timestamp: text('timestamp').notNull().default(sql`(datetime('now'))`),
+  accuracy: real('accuracy'),
+  speed: real('speed'),
+})
+
+export const pescariaVisitas = sqliteTable('pescaria_visitas', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  pescariaId: integer('pescaria_id').notNull().references(() => pescarias.id, { onDelete: 'cascade' }),
+  pesqueiroId: integer('pesqueiro_id').references(() => pesqueiros.id),
+  nomePersonalizado: text('nome_personalizado'),
+  lat: real('lat'),
+  lon: real('lon'),
+  horaInicio: text('hora_inicio').notNull().default(sql`(datetime('now'))`),
+  horaFim: text('hora_fim'),
+  especie: text('especie'),
+  quantidade: integer('quantidade'),
+  isca: text('isca'),
+  tecnica: text('tecnica'),
+  notas: text('notas'),
+})
+
+export const pescariaFotos = sqliteTable('pescaria_fotos', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  pescariaId: integer('pescaria_id').notNull().references(() => pescarias.id, { onDelete: 'cascade' }),
+  dataUrl: text('data_url').notNull(),
+  legenda: text('legenda'),
+  lat: real('lat'),
+  lon: real('lon'),
+  timestamp: text('timestamp').notNull().default(sql`(datetime('now'))`),
+})
