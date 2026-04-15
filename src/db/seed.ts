@@ -99,8 +99,8 @@ export const SEED_PESQUEIROS = [
   {
     slug: 'ilha-do-mel-fortaleza',
     nome: 'Ilha do Mel Fortaleza',
-    lat: -25.4970,
-    lon: -48.3020,
+    lat: -25.4940,
+    lon: -48.3070,
     tipo: 'baia',
     profundidadeM: 8,
     distanciaCostaMn: 1,
@@ -110,8 +110,8 @@ export const SEED_PESQUEIROS = [
   {
     slug: 'ilha-das-pecas',
     nome: 'Ilha das Peças',
-    lat: -25.4350,
-    lon: -48.3500,
+    lat: -25.4118,
+    lon: -48.2997,
     tipo: 'baia',
     profundidadeM: 6,
     distanciaCostaMn: 1,
@@ -121,8 +121,8 @@ export const SEED_PESQUEIROS = [
   {
     slug: 'ponta-do-poco',
     nome: 'Ponta do Poço',
-    lat: -25.5490,
-    lon: -48.3870,
+    lat: -25.5495,
+    lon: -48.3874,
     tipo: 'baia',
     profundidadeM: 10,
     distanciaCostaMn: 0.5,
@@ -469,7 +469,7 @@ export const SEED_PESQUEIROS = [
   {
     slug: 'ilha-do-bom-abrigo',
     nome: 'Ilha do Bom Abrigo',
-    lat: -25.1200,
+    lat: -25.1100,
     lon: -47.8600,
     tipo: 'laje',
     profundidadeM: 15,
@@ -493,8 +493,8 @@ export const SEED_PESQUEIROS = [
   {
     slug: 'barra-de-cananeia',
     nome: 'Barra de Cananéia',
-    lat: -25.0550,
-    lon: -47.9250,
+    lat: -25.0280,
+    lon: -47.9350,
     tipo: 'canal',
     profundidadeM: 8,
     distanciaCostaMn: 0,
@@ -517,8 +517,8 @@ export const SEED_PESQUEIROS = [
   {
     slug: 'ilha-do-cardoso',
     nome: 'Ilha do Cardoso',
-    lat: -25.1000,
-    lon: -47.9600,
+    lat: -25.1617,
+    lon: -47.9744,
     tipo: 'baia',
     profundidadeM: 6,
     distanciaCostaMn: 1,
