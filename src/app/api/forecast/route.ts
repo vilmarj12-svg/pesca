@@ -134,7 +134,7 @@ export async function GET() {
         })
       }
 
-      // Group by day — only fishing hours (05:00 to 14:00)
+      // Group by day — only fishing hours (04:01 to 14:59)
       // Also collect weather conditions per day to check navigation risk
       const diasMap = new Map<string, HourForecast[]>()
       const diasWeatherMap = new Map<string, Array<{ ventoKt: number; ondaM: number; cape: number; visKm: number }>>()
@@ -144,7 +144,7 @@ export async function GET() {
         if (!wh) continue
         const forecastTime = new Date(wh.time)
         const hour = forecastTime.getHours()
-        if (hour < 5 || hour > 14) continue
+        if (hour < 4 || hour >= 15) continue
         const date = wh.time.split('T')[0]
 
         // Weather conditions for navigation risk
@@ -159,7 +159,7 @@ export async function GET() {
 
       for (const hora of horas) {
         const h = new Date(hora.timestamp).getHours()
-        if (h < 5 || h > 14) continue
+        if (h < 4 || h >= 15) continue
         const date = hora.timestamp.split('T')[0]
         if (!diasMap.has(date)) diasMap.set(date, [])
         diasMap.get(date)!.push(hora)
