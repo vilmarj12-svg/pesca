@@ -109,6 +109,7 @@ export default function DiasIdeaisPage() {
 function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [titulo, setTitulo] = useState('')
   const [data, setData] = useState(new Date().toISOString().split('T')[0])
+  const [hora, setHora] = useState('')
   const [ventoMin, setVentoMin] = useState('')
   const [ventoMax, setVentoMax] = useState('')
   const [ondaMin, setOndaMin] = useState('')
@@ -138,12 +139,14 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
 
   const [dadosDia, setDadosDia] = useState<string>('')
 
-  // Buscar condições reais do dia selecionado
-  async function carregarCondicoes(dateStr: string) {
+  // Buscar condições reais do dia e hora selecionados
+  async function carregarCondicoes(dateStr: string, horaStr: string) {
     setLoadingConditions(true)
     setDadosDia('')
     try {
-      const res = await fetch(`/api/condicoes-dia?date=${dateStr}`)
+      let url = `/api/condicoes-dia?date=${dateStr}`
+      if (horaStr) url += `&hour=${horaStr}`
+      const res = await fetch(url)
       const c = await res.json()
 
       if (c.found) {
@@ -157,9 +160,10 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
         setTempAguaMax(c.tempAguaMax.toString())
         setLuaFase(c.luaFase || '')
         setMareFase(c.mareFase || '')
-        setDadosDia(`${c.totalSnapshots} registros encontrados`)
+        const label = c.exact ? `Dados exatos das ${horaStr}h` : `${c.totalSnapshots} registros do dia`
+        setDadosDia(label)
       } else {
-        setDadosDia('Sem dados para essa data')
+        setDadosDia('Sem dados para essa data/hora')
       }
     } catch {
       setDadosDia('Erro ao buscar dados')
@@ -167,8 +171,8 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
     setLoadingConditions(false)
   }
 
-  // Carregar ao montar e ao mudar data
-  useEffect(() => { carregarCondicoes(data) }, [data])
+  // Carregar ao montar e ao mudar data ou hora
+  useEffect(() => { carregarCondicoes(data, hora) }, [data, hora])
 
   function handleDateChange(newDate: string) {
     setData(newDate)
@@ -221,7 +225,21 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
 
         <div className="flex gap-2 mb-3">
           <input type="date" value={data} onChange={e => handleDateChange(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800" />
-          {loadingConditions && <span className="text-xs text-stone-400 self-center animate-pulse">Carregando...</span>}
+          <select value={hora} onChange={e => setHora(e.target.value)} className="w-24 px-2 py-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm">
+            <option value="">Dia todo</option>
+            <option value="04">04h</option>
+            <option value="05">05h</option>
+            <option value="06">06h</option>
+            <option value="07">07h</option>
+            <option value="08">08h</option>
+            <option value="09">09h</option>
+            <option value="10">10h</option>
+            <option value="11">11h</option>
+            <option value="12">12h</option>
+            <option value="13">13h</option>
+            <option value="14">14h</option>
+          </select>
+          {loadingConditions && <span className="text-[10px] text-stone-400 self-center animate-pulse">...</span>}
         </div>
 
         {/* Local */}
