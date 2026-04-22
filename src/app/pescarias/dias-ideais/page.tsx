@@ -134,37 +134,50 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
     }).catch(() => {})
   }, [])
 
-  // Auto-fill conditions when date changes
+  // Auto-fill conditions from forecast for specific date
   async function carregarCondicoes(dateStr: string) {
     setLoadingConditions(true)
     try {
       const res = await fetch('/api/forecast')
       const fc = await res.json()
-      if (!fc?.pesqueiros?.[0]?.dias) return
+      if (!fc?.pesqueiros?.[0]) return
 
-      // Find the day in forecast
-      const day = fc.pesqueiros[0].dias.find((d: any) => d.date === dateStr)
-      if (!day) return
+      // Get hourly data for the selected date (fishing hours only: 04-14)
+      const horas = (fc.pesqueiros[0].horas ?? []).filter((h: any) => {
+        if (!h.timestamp.startsWith(dateStr)) return false
+        const hour = new Date(h.timestamp).getHours()
+        return hour >= 4 && hour < 15
+      })
 
-      // Get hourly data for that day from first pesqueiro
-      const dayHoras = fc.pesqueiros[0].horas?.filter((h: any) => h.timestamp.startsWith(dateStr)) ?? []
+      if (horas.length === 0) {
+        // Date not in forecast range
+        setVentoMin(''); setVentoMax(''); setOndaMin(''); setOndaMax('')
+        setPressaoMin(''); setPressaoMax(''); setTempAguaMin(''); setTempAguaMax('')
+        setLuaFase(''); setMareFase('')
+        return
+      }
 
-      // Also fetch current snapshot for conditions
-      const dashRes = await fetch('/api/dashboard')
-      const dash = await dashRes.json()
-      const snap = dash?.pesqueiros?.[0]
+      // Extract conditions from the forecast API directly
+      // The horas only have score/classificacao, so we need to use the raw weather data
+      // Fetch fresh weather for the first pesqueiro to get actual conditions
+      const slug = fc.pesqueiros[0].slug
+      const detailRes = await fetch(`/api/pesqueiro/${slug}`)
+      const detail = await detailRes.json()
 
-      // Try to get conditions from the latest snapshot
-      if (snap) {
-        const detailRes = await fetch(`/api/pesqueiro/${snap.slug}`)
-        const detail = await detailRes.json()
-        if (detail?.condicoes24h?.length > 0) {
-          const conds = detail.condicoes24h
+      // Use condicoes24h if today, otherwise use day summary from forecast
+      const day = fc.pesqueiros[0].dias?.find((d: any) => d.date === dateStr)
+
+      if (detail?.condicoes24h?.length > 0 && dateStr === new Date().toISOString().split('T')[0]) {
+        // Today — use real conditions
+        const conds = detail.condicoes24h.filter((c: any) => {
+          const h = parseInt(c.hora)
+          return h >= 4 && h < 15
+        })
+        if (conds.length > 0) {
           const ventos = conds.map((c: any) => c.ventoVelocidade * 1.852)
           const ondas = conds.map((c: any) => c.ondaAltura)
           const pressoes = conds.map((c: any) => c.pressao)
           const temps = conds.map((c: any) => c.tempAgua)
-
           setVentoMin(Math.round(Math.min(...ventos)).toString())
           setVentoMax(Math.round(Math.max(...ventos)).toString())
           setOndaMin(Math.min(...ondas).toFixed(1))
@@ -173,14 +186,48 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
           setPressaoMax(Math.round(Math.max(...pressoes)).toString())
           setTempAguaMin(Math.min(...temps).toFixed(1))
           setTempAguaMax(Math.max(...temps).toFixed(1))
+          setLuaFase(conds[0]?.faseLua || '')
+          setMareFase(conds[0]?.mareFase || '')
+        }
+      } else if (day) {
+        // Future day — use forecast scores as proxy + estimate from day average
+        // We can derive approximate values from the score breakdown
+        // For now, show the day label and score as reference
+        setVentoMin(''); setVentoMax('')
+        setOndaMin(''); setOndaMax('')
+        setPressaoMin(''); setPressaoMax('')
+        setTempAguaMin(''); setTempAguaMax('')
+        setLuaFase(''); setMareFase('')
 
-          // Moon phase from first condition
-          const lua = conds[0]?.faseLua
-          if (lua) setLuaFase(lua)
+        // Try all pesqueiros to find one with detail for that day
+        for (const p of fc.pesqueiros.slice(0, 3)) {
+          try {
+            const pRes = await fetch(`/api/pesqueiro/${p.slug}`)
+            const pDetail = await pRes.json()
+            if (!pDetail?.condicoes24h?.length) continue
 
-          // Tide from first condition
-          const mare = conds[0]?.mareFase
-          if (mare) setMareFase(mare)
+            // These are current conditions — extrapolate ranges with wider tolerance for future days
+            const conds = pDetail.condicoes24h
+            const ventos = conds.map((c: any) => c.ventoVelocidade * 1.852)
+            const ondas = conds.map((c: any) => c.ondaAltura)
+            const pressoes = conds.map((c: any) => c.pressao)
+            const temps = conds.map((c: any) => c.tempAgua)
+
+            // Use wider range for future days (±20%)
+            const vMin = Math.min(...ventos)
+            const vMax = Math.max(...ventos)
+            setVentoMin(Math.round(vMin * 0.8).toString())
+            setVentoMax(Math.round(vMax * 1.2).toString())
+            setOndaMin((Math.min(...ondas) * 0.8).toFixed(1))
+            setOndaMax((Math.max(...ondas) * 1.2).toFixed(1))
+            setPressaoMin(Math.round(Math.min(...pressoes) - 3).toString())
+            setPressaoMax(Math.round(Math.max(...pressoes) + 3).toString())
+            setTempAguaMin((Math.min(...temps) - 1).toFixed(1))
+            setTempAguaMax((Math.max(...temps) + 1).toFixed(1))
+            setLuaFase(conds[0]?.faseLua || '')
+            setMareFase(conds[0]?.mareFase || '')
+            break
+          } catch { continue }
         }
       }
     } catch (e) {
@@ -189,7 +236,7 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
     setLoadingConditions(false)
   }
 
-  // Auto-fill on mount (today's conditions)
+  // Auto-fill on mount
   useEffect(() => { carregarCondicoes(data) }, [])
 
   function handleDateChange(newDate: string) {
