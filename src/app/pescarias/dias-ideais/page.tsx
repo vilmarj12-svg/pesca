@@ -136,81 +136,39 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
     }).catch(() => {})
   }, [])
 
-  const [forecastData, setForecastData] = useState<any>(null)
-  const [snapshotData, setSnapshotData] = useState<any>(null)
+  const [dadosDia, setDadosDia] = useState<string>('')
 
-  // Load forecast + snapshot once on mount
-  useEffect(() => {
-    fetch('/api/forecast').then(r => r.json()).then(setForecastData).catch(() => {})
-    fetch('/api/condicoes-dia').then(r => r.json()).then(setSnapshotData).catch(() => {})
-  }, [])
-
-  // Fill conditions whenever date changes or data loads
-  useEffect(() => {
-    if (!forecastData && !snapshotData) return
-    fillConditions(data)
-  }, [data, forecastData, snapshotData])
-
-  function fillConditions(dateStr: string) {
+  // Buscar condições reais do dia selecionado
+  async function carregarCondicoes(dateStr: string) {
     setLoadingConditions(true)
+    setDadosDia('')
+    try {
+      const res = await fetch(`/api/condicoes-dia?date=${dateStr}`)
+      const c = await res.json()
 
-    // Try forecast first (has hourly data per day)
-    if (forecastData?.pesqueiros?.[0]) {
-      const p = forecastData.pesqueiros[0]
-      const dayHoras = (p.horas ?? []).filter((h: any) => {
-        if (!h.timestamp.startsWith(dateStr)) return false
-        const hour = new Date(h.timestamp).getHours()
-        return hour >= 4 && hour < 15
-      })
-
-      // If we have forecast data for this day, try to get conditions from detail
-      const day = p.dias?.find((d: any) => d.date === dateStr)
-      if (day && snapshotData) {
-        // Scale snapshot values based on day's score ratio vs today
-        const todayDay = p.dias?.[0]
-        const ratio = todayDay ? day.scoreMedio / Math.max(todayDay.scoreMedio, 1) : 1
-
-        const v = snapshotData.ventoKmh ?? 10
-        const o = snapshotData.ondaM ?? 1
-        const pr = snapshotData.pressaoHpa ?? 1013
-        const t = snapshotData.tempAgua ?? 22
-
-        setVentoMin(Math.round(v * 0.7).toString())
-        setVentoMax(Math.round(v * 1.3 + 3).toString())
-        setOndaMin((o * 0.7).toFixed(1))
-        setOndaMax((o * 1.3 + 0.3).toFixed(1))
-        setPressaoMin(Math.round(pr - 4).toString())
-        setPressaoMax(Math.round(pr + 4).toString())
-        setTempAguaMin((t - 1.5).toFixed(1))
-        setTempAguaMax((t + 1.5).toFixed(1))
-        setLuaFase(snapshotData.luaFase || '')
-        setMareFase(snapshotData.mareFase || '')
-        setLoadingConditions(false)
-        return
+      if (c.found) {
+        setVentoMin(c.ventoMinKmh.toString())
+        setVentoMax(c.ventoMaxKmh.toString())
+        setOndaMin(c.ondaMin.toString())
+        setOndaMax(c.ondaMax.toString())
+        setPressaoMin(c.pressaoMin.toString())
+        setPressaoMax(c.pressaoMax.toString())
+        setTempAguaMin(c.tempAguaMin.toString())
+        setTempAguaMax(c.tempAguaMax.toString())
+        setLuaFase(c.luaFase || '')
+        setMareFase(c.mareFase || '')
+        setDadosDia(`${c.totalSnapshots} registros encontrados`)
+      } else {
+        setDadosDia('Sem dados para essa data')
       }
+    } catch {
+      setDadosDia('Erro ao buscar dados')
     }
-
-    // Fallback: use snapshot directly
-    if (snapshotData) {
-      const v = snapshotData.ventoKmh ?? 10
-      const o = snapshotData.ondaM ?? 1
-      const pr = snapshotData.pressaoHpa ?? 1013
-      const t = snapshotData.tempAgua ?? 22
-
-      setVentoMin(Math.round(v * 0.8).toString())
-      setVentoMax(Math.round(v * 1.2 + 2).toString())
-      setOndaMin((o * 0.8).toFixed(1))
-      setOndaMax((o * 1.2 + 0.2).toFixed(1))
-      setPressaoMin(Math.round(pr - 3).toString())
-      setPressaoMax(Math.round(pr + 3).toString())
-      setTempAguaMin((t - 1).toFixed(1))
-      setTempAguaMax((t + 1).toFixed(1))
-      setLuaFase(snapshotData.luaFase || '')
-      setMareFase(snapshotData.mareFase || '')
-    }
-
     setLoadingConditions(false)
   }
+
+  // Carregar ao montar e ao mudar data
+  useEffect(() => { carregarCondicoes(data) }, [data])
 
   function handleDateChange(newDate: string) {
     setData(newDate)
@@ -313,7 +271,13 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
         {/* Condições automáticas */}
         <div className="flex items-center justify-between mb-1">
           <p className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">⛅ Condições do dia</p>
-          <span className="text-[9px] text-emerald-500 font-semibold">✓ Preenchido automaticamente</span>
+          {loadingConditions ? (
+            <span className="text-[9px] text-stone-400 animate-pulse">Buscando...</span>
+          ) : dadosDia ? (
+            <span className={`text-[9px] font-semibold ${dadosDia.includes('registros') ? 'text-emerald-500' : 'text-orange-500'}`}>
+              {dadosDia.includes('registros') ? '✓' : '⚠'} {dadosDia}
+            </span>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-2 gap-2 mb-2">
