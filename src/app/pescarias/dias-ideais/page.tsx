@@ -126,6 +126,8 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
   const [fotos, setFotos] = useState<string[]>([])
   const [loadingConditions, setLoadingConditions] = useState(false)
   const [pesqueiros, setPesqueiros] = useState<Array<{ slug: string; nome: string }>>([])
+  const [buscaPesqueiro, setBuscaPesqueiro] = useState('')
+  const [showPesqueiroList, setShowPesqueiroList] = useState(false)
 
   // Load pesqueiros list
   useEffect(() => {
@@ -296,10 +298,40 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
 
         {/* Local */}
         <p className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 font-semibold">📍 Onde pescou</p>
-        <select value={local} onChange={e => setLocal(e.target.value)} className={`${inputCls} mb-2`}>
-          <option value="">Selecione o pesqueiro</option>
-          {pesqueiros.map(p => <option key={p.slug} value={p.slug}>{p.nome}</option>)}
-        </select>
+        <div className="relative mb-2">
+          <input
+            placeholder="Buscar pesqueiro..."
+            value={buscaPesqueiro}
+            onChange={e => { setBuscaPesqueiro(e.target.value); setShowPesqueiroList(true) }}
+            onFocus={() => setShowPesqueiroList(true)}
+            className={inputCls}
+          />
+          {local && !showPesqueiroList && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-xs text-emerald-600 font-semibold">✓ {pesqueiros.find(p => p.slug === local)?.nome}</span>
+              <button onClick={() => { setLocal(''); setBuscaPesqueiro('') }} className="text-[10px] text-stone-400 hover:text-red-500">✕</button>
+            </div>
+          )}
+          {showPesqueiroList && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              {pesqueiros
+                .filter(p => p.nome.toLowerCase().includes(buscaPesqueiro.toLowerCase()))
+                .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                .map(p => (
+                  <button
+                    key={p.slug}
+                    onClick={() => { setLocal(p.slug); setBuscaPesqueiro(p.nome); setShowPesqueiroList(false) }}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/50 ${local === p.slug ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold' : ''}`}
+                  >
+                    {p.nome}
+                  </button>
+                ))}
+              {pesqueiros.filter(p => p.nome.toLowerCase().includes(buscaPesqueiro.toLowerCase())).length === 0 && (
+                <p className="px-3 py-2 text-xs text-stone-400">Nenhum pesqueiro encontrado</p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Peixes e isca */}
         <p className="text-[10px] text-stone-500 uppercase tracking-wider mb-1 font-semibold">🐟 O que pescou</p>
