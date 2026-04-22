@@ -136,32 +136,81 @@ function AddDiaIdealModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
     }).catch(() => {})
   }, [])
 
-  // Auto-fill conditions from latest snapshot
-  async function carregarCondicoes() {
-    setLoadingConditions(true)
-    try {
-      const res = await fetch('/api/condicoes-dia')
-      if (!res.ok) return
-      const c = await res.json()
+  const [forecastData, setForecastData] = useState<any>(null)
+  const [snapshotData, setSnapshotData] = useState<any>(null)
 
-      setVentoMin(Math.round(c.ventoKmh * 0.8).toString())
-      setVentoMax(Math.round(c.ventoKmh * 1.2 + 2).toString())
-      setOndaMin((c.ondaM * 0.8).toFixed(1))
-      setOndaMax((c.ondaM * 1.2 + 0.2).toFixed(1))
-      setPressaoMin(Math.round(c.pressaoHpa - 3).toString())
-      setPressaoMax(Math.round(c.pressaoHpa + 3).toString())
-      setTempAguaMin((c.tempAgua - 1).toFixed(1))
-      setTempAguaMax((c.tempAgua + 1).toFixed(1))
-      setLuaFase(c.luaFase || '')
-      setMareFase(c.mareFase || '')
-    } catch (e) {
-      console.error('Erro ao carregar condições:', e)
+  // Load forecast + snapshot once on mount
+  useEffect(() => {
+    fetch('/api/forecast').then(r => r.json()).then(setForecastData).catch(() => {})
+    fetch('/api/condicoes-dia').then(r => r.json()).then(setSnapshotData).catch(() => {})
+  }, [])
+
+  // Fill conditions whenever date changes or data loads
+  useEffect(() => {
+    if (!forecastData && !snapshotData) return
+    fillConditions(data)
+  }, [data, forecastData, snapshotData])
+
+  function fillConditions(dateStr: string) {
+    setLoadingConditions(true)
+
+    // Try forecast first (has hourly data per day)
+    if (forecastData?.pesqueiros?.[0]) {
+      const p = forecastData.pesqueiros[0]
+      const dayHoras = (p.horas ?? []).filter((h: any) => {
+        if (!h.timestamp.startsWith(dateStr)) return false
+        const hour = new Date(h.timestamp).getHours()
+        return hour >= 4 && hour < 15
+      })
+
+      // If we have forecast data for this day, try to get conditions from detail
+      const day = p.dias?.find((d: any) => d.date === dateStr)
+      if (day && snapshotData) {
+        // Scale snapshot values based on day's score ratio vs today
+        const todayDay = p.dias?.[0]
+        const ratio = todayDay ? day.scoreMedio / Math.max(todayDay.scoreMedio, 1) : 1
+
+        const v = snapshotData.ventoKmh ?? 10
+        const o = snapshotData.ondaM ?? 1
+        const pr = snapshotData.pressaoHpa ?? 1013
+        const t = snapshotData.tempAgua ?? 22
+
+        setVentoMin(Math.round(v * 0.7).toString())
+        setVentoMax(Math.round(v * 1.3 + 3).toString())
+        setOndaMin((o * 0.7).toFixed(1))
+        setOndaMax((o * 1.3 + 0.3).toFixed(1))
+        setPressaoMin(Math.round(pr - 4).toString())
+        setPressaoMax(Math.round(pr + 4).toString())
+        setTempAguaMin((t - 1.5).toFixed(1))
+        setTempAguaMax((t + 1.5).toFixed(1))
+        setLuaFase(snapshotData.luaFase || '')
+        setMareFase(snapshotData.mareFase || '')
+        setLoadingConditions(false)
+        return
+      }
     }
+
+    // Fallback: use snapshot directly
+    if (snapshotData) {
+      const v = snapshotData.ventoKmh ?? 10
+      const o = snapshotData.ondaM ?? 1
+      const pr = snapshotData.pressaoHpa ?? 1013
+      const t = snapshotData.tempAgua ?? 22
+
+      setVentoMin(Math.round(v * 0.8).toString())
+      setVentoMax(Math.round(v * 1.2 + 2).toString())
+      setOndaMin((o * 0.8).toFixed(1))
+      setOndaMax((o * 1.2 + 0.2).toFixed(1))
+      setPressaoMin(Math.round(pr - 3).toString())
+      setPressaoMax(Math.round(pr + 3).toString())
+      setTempAguaMin((t - 1).toFixed(1))
+      setTempAguaMax((t + 1).toFixed(1))
+      setLuaFase(snapshotData.luaFase || '')
+      setMareFase(snapshotData.mareFase || '')
+    }
+
     setLoadingConditions(false)
   }
-
-  // Auto-fill on mount
-  useEffect(() => { carregarCondicoes() }, [])
 
   function handleDateChange(newDate: string) {
     setData(newDate)
