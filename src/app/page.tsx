@@ -9,6 +9,7 @@ import { EspeciesEmAlta } from '@/components/dashboard/EspeciesEmAlta'
 import { IscasEmAlta } from '@/components/dashboard/IscasEmAlta'
 import { NaviosRanking } from '@/components/dashboard/NaviosRanking'
 import { AlertasNavegacao } from '@/components/dashboard/AlertasNavegacao'
+import { DiaIdealAlert } from '@/components/dashboard/DiaIdealAlert'
 import { formatTimestamp, getClassificacaoLabel } from '@/lib/format'
 import { getScoreBadgeClass } from '@/lib/score-colors'
 import type { DashboardData, PesqueiroResumo } from '@/lib/types'
@@ -48,10 +49,19 @@ interface AlertaData {
   icone: string
 }
 
+interface MatchResult {
+  diaIdealId: number
+  titulo: string
+  matchPercent: number
+  fatoresMatch: string[]
+  fatoresMiss: string[]
+}
+
 interface ForecastData {
   pesqueiros: PesqueiroForecast[]
   rankingMelhorDia: Array<{ slug: string; nome: string } & DayForecast>
   alertasPorDia: Record<string, AlertaData[]>
+  matchesPorDia: Record<string, MatchResult[]>
 }
 
 function getDayColor(score: number): string {
@@ -263,6 +273,11 @@ export default function DashboardPage() {
             ⚠️ Alertas — {selectedDayLabel}
           </h2>
           <AlertasNavegacao alertas={forecast.alertasPorDia[selectedDay] ?? []} />
+          {forecast.matchesPorDia?.[selectedDay]?.length > 0 && (
+            <div className="mt-3">
+              <DiaIdealAlert matches={forecast.matchesPorDia[selectedDay]} />
+            </div>
+          )}
         </section>
       )}
 

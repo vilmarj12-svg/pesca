@@ -137,6 +137,25 @@ sqlite.exec(`
     notas TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS dias_ideais (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    data TEXT NOT NULL,
+    pesqueiro_slug TEXT,
+    vento_min REAL,
+    vento_max REAL,
+    onda_min REAL,
+    onda_max REAL,
+    pressao_min REAL,
+    pressao_max REAL,
+    temp_agua_min REAL,
+    temp_agua_max REAL,
+    lua_fase TEXT,
+    mare_fase TEXT,
+    notas TEXT,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS pescaria_fotos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pescaria_id INTEGER NOT NULL REFERENCES pescarias(id) ON DELETE CASCADE,

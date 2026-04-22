@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Route, MapPin, Camera, Fish, Plus, Calendar } from 'lucide-react'
+import { Route, MapPin, Camera, Fish, Plus, Calendar, Star } from 'lucide-react'
 
 interface Pescaria {
   id: number
@@ -60,12 +60,17 @@ export default function PescariasPage() {
             Minhas Pescarias
           </h1>
         </div>
-        <button
-          onClick={iniciarNova}
-          className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white text-xs sm:text-sm font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
+        <div className="flex gap-2">
+          <Link href="/pescarias/dias-ideais" className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-semibold border border-yellow-200 dark:border-yellow-800">
+            <Star className="w-3.5 h-3.5" fill="currentColor" /> Dias ideais
+          </Link>
+          <button
+            onClick={iniciarNova}
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white text-xs sm:text-sm font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Nova
         </button>
+        </div>
       </div>
 
       {loading ? (

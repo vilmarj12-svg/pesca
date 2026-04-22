@@ -86,6 +86,25 @@ export const cacheNavios = sqliteTable('cache_navios', {
   status: text('status').notNull(),
 })
 
+export const diasIdeais = sqliteTable('dias_ideais', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  titulo: text('titulo').notNull(),
+  data: text('data').notNull(),
+  pesqueiroSlug: text('pesqueiro_slug'),
+  ventoMin: real('vento_min'),
+  ventoMax: real('vento_max'),
+  ondaMin: real('onda_min'),
+  ondaMax: real('onda_max'),
+  pressaoMin: real('pressao_min'),
+  pressaoMax: real('pressao_max'),
+  tempAguaMin: real('temp_agua_min'),
+  tempAguaMax: real('temp_agua_max'),
+  luaFase: text('lua_fase'),
+  mareFase: text('mare_fase'),
+  notas: text('notas'),
+  criadoEm: text('criado_em').notNull().default(sql`(datetime('now'))`),
+})
+
 export const pescarias = sqliteTable('pescarias', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   titulo: text('titulo').notNull(),

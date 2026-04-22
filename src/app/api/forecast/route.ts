@@ -10,7 +10,9 @@ import { buildCondicoes } from '@/cron/build-condicoes'
 import { calculateScore } from '@/engine/score'
 import { DEFAULT_WEIGHTS } from '@/engine/constants'
 import { detectAlertasNavegacao, type AlertaNavegacao } from '@/lib/alertas-navegacao'
+import { matchDiaIdeal, type MatchResult } from '@/lib/dia-ideal-match'
 import { getCached, setCache } from '@/lib/cache'
+import { diasIdeais } from '@/db/schema'
 import type { Pesqueiro } from '@/engine/types'
 
 export const dynamic = 'force-dynamic'
@@ -257,10 +259,60 @@ export async function GET() {
       }
     }
 
+    // Match forecast days against saved "dias ideais"
+    const savedIdeais = db.select().from(diasIdeais).all()
+    const matchesPorDia: Record<string, MatchResult[]> = {}
+
+    if (savedIdeais.length > 0 && refWeather) {
+      for (const [date, dayHourly] of hoursByDate) {
+        // Average conditions for the day (fishing hours only)
+        const fishingHours = dayHourly.filter(wh => {
+          const h = new Date(wh.time).getHours()
+          return h >= 4 && h < 15
+        })
+        if (fishingHours.length === 0) continue
+
+        const avgVento = fishingHours.reduce((s, w) => s + w.windSpeed10m * 1.852, 0) / fishingHours.length
+        const startIdx = allHourly.indexOf(fishingHours[0])
+        const marineHours = fishingHours.map((_, j) => refMarine?.hourly[startIdx + j])
+        const avgOnda = marineHours.reduce((s, m) => s + (m?.waveHeight ?? 0), 0) / fishingHours.length
+        const avgPressao = fishingHours.reduce((s, w) => s + w.pressureMsl, 0) / fishingHours.length
+        const avgTempAgua = marineHours.reduce((s, m) => s + (m?.seaSurfaceTemperature ?? 22), 0) / fishingHours.length
+
+        // Moon phase from illumination (simplified)
+        const luaIlum = 0.5 // approximate — would need astronomy calc per day
+        let luaFase = 'crescente'
+        if (luaIlum < 0.1) luaFase = 'nova'
+        else if (luaIlum > 0.9) luaFase = 'cheia'
+        else if (luaIlum >= 0.6) luaFase = 'minguante'
+
+        const cond = {
+          ventoKmh: avgVento,
+          ondaM: avgOnda,
+          pressaoHpa: avgPressao,
+          tempAgua: avgTempAgua,
+          luaFase,
+          mareFase: 'subindo',
+        }
+
+        const dayMatches: MatchResult[] = []
+        for (const ideal of savedIdeais) {
+          const match = matchDiaIdeal(ideal as any, cond)
+          if (match.matchPercent >= 70) {
+            dayMatches.push(match)
+          }
+        }
+        if (dayMatches.length > 0) {
+          matchesPorDia[date] = dayMatches.sort((a, b) => b.matchPercent - a.matchPercent)
+        }
+      }
+    }
+
     const response = {
       pesqueiros: result,
       rankingMelhorDia,
       alertasPorDia,
+      matchesPorDia,
       geradoEm: now.toISOString(),
     }
     setCache(CACHE_KEY, response, CACHE_TTL)
